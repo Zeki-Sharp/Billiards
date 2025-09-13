@@ -1,0 +1,102 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b436cf91027441b4bb7b770dc1daec81, type: 3}
+  m_Name: Player-Physic
+  m_EditorClassIdentifier: 
+  mass: 0.5
+  radius: 0.5
+  bounceDamping: 1
+  friction: 0
+  stopThreshold: 1
+  linearDamping: 0.1
+  isWhiteBall: 1
+  maxSpeed: 50
+  speedToBounciness:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  speedToDamping:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: -0.0019911043
+      value: 0.99845654
+      inSlope: -0.1472804
+      outSlope: -0.1472804
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.6325725
+    - serializedVersion: 3
+      time: 0.17669773
+      value: 0.92908436
+      inSlope: -1.0342687
+      outSlope: -1.0342687
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.6657512
+      value: 0.10732361
+      inSlope: -1.0639058
+      outSlope: -1.0639058
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.99466527
+      value: 0.0046725217
+      inSlope: -0.15907292
+      outSlope: -0.15907292
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.92790747
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  minBounciness: 0.3
+  maxBounciness: 1
+  minDamping: 0.3
+  maxDamping: 1.4
+  minReboundAngle: 15
+  enableAngleSnap: 1
+  angleVariation: 10
+  preventVerticalBounce: 1
+  enableTimeDamping: 1
+  timeDampingRate: 0.8
+  maxTimeDamping: 2.4
+  timeDampingStartTime: 1
+  updateThreshold: 0.05
+  updateInterval: 0.02

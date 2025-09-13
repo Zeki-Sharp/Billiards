@@ -1,0 +1,696 @@
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class AimController : MonoBehaviour
+{
+    [Header("瞄准设置")]
+    public float aimLineLength = 3f; // 瞄准线固定长度（反射计算器失败时的后备方案）
+    
+    [Header("力度设置")]
+    public float maxForce = 10f; // 最大力度值
+    public float minForce = 1f; // 最小力度值
+    public float chargeSpeed = 3f; // 蓄力速度
+    public bool useCyclingCharge = true; // 是否使用循环蓄力
+    
+    [Header("UI设置")]
+    public ChargeBarUI chargeBarUI; // 蓄力条UI
+    
+    [Header("球体设置")]
+    public WhiteBall whiteBall; // 白球引用
+    
+    [Header("相机设置")]
+    public Camera targetCamera; // 目标相机，如果为空则使用主相机
+    
+    [Header("反射计算器")]
+    public MonoBehaviour reflectionCalculator; // 反射计算器引用
+    
+    [Header("材质控制器")]
+    public AimLineMaterialController materialController; // 材质控制器引用
+    
+    // 私有变量
+    private Camera cam;
+    private bool isCharging = false;
+    private float currentForce = 0f;
+    private Vector2 aimDirection;
+    private LineRenderer aimLine;
+    private List<Vector3> reflectionPath = new List<Vector3>();
+    
+    // 分段绘制相关
+    private List<LineRenderer> segmentLines = new List<LineRenderer>();
+    private GameObject lineContainer; // 用于管理所有线段
+    
+    // 事件
+    public System.Action<float> OnForceChanged;
+    public System.Action<Vector2, float> OnLaunch;
+    
+    void Start()
+    {
+        InitializeController();
+    }
+    
+    void Update()
+    {
+        HandleInput();
+        UpdateAimLine();
+    }
+    
+    void InitializeController()
+    {
+        // 获取相机
+        cam = targetCamera != null ? targetCamera : Camera.main;
+        if (cam == null)
+        {
+            Debug.LogError("TestAimController: 找不到相机！请设置targetCamera或确保有MainCamera标签的相机");
+            return;
+        }
+        
+        // 获取白球
+        if (whiteBall == null)
+        {
+            whiteBall = FindAnyObjectByType<WhiteBall>();
+            if (whiteBall == null)
+            {
+                Debug.LogError("TestAimController: 找不到WhiteBall！请设置whiteBall引用");
+                return;
+            }
+        }
+        
+        // 设置瞄准线
+        SetupAimLine();
+        
+        // 初始化反射计算器
+        InitializeReflectionCalculator();
+        
+        // 初始化材质控制器
+        InitializeMaterialController();
+        
+        Debug.Log("TestAimController 初始化完成");
+    }
+    
+    void SetupAimLine()
+    {
+        // 创建瞄准线容器
+        lineContainer = new GameObject("AimLineContainer");
+        lineContainer.transform.SetParent(transform);
+        
+        // 创建主瞄准线对象（用于无反射情况）
+        GameObject lineObj = new GameObject("AimLine");
+        lineObj.transform.SetParent(lineContainer.transform);
+        
+        // 添加LineRenderer组件
+        aimLine = lineObj.AddComponent<LineRenderer>();
+        aimLine.material = new Material(Shader.Find("Sprites/Default"));
+        
+        // 设置默认颜色（材质控制器会在后续更新）
+        aimLine.startColor = Color.yellow;
+        aimLine.endColor = Color.yellow;
+        aimLine.startWidth = 0.1f;
+        aimLine.endWidth = 0.1f;
+        aimLine.positionCount = 0;
+        aimLine.sortingOrder = 10;
+        aimLine.useWorldSpace = true;
+        
+        // 设置Round Cap
+        aimLine.numCapVertices = 8; // 圆形端点的顶点数
+        aimLine.alignment = LineAlignment.TransformZ; // 确保线条朝向正确
+        
+        Debug.Log("瞄准线设置完成");
+    }
+    
+    // 创建分段线段
+    LineRenderer CreateSegmentLine(int segmentIndex)
+    {
+        GameObject segmentObj = new GameObject($"AimLineSegment_{segmentIndex}");
+        segmentObj.transform.SetParent(lineContainer.transform);
+        
+        LineRenderer segmentLine = segmentObj.AddComponent<LineRenderer>();
+        
+        // 使用材质控制器的材质，如果没有则使用默认材质
+        if (materialController != null && materialController.GetAimLineMaterial() != null)
+        {
+            segmentLine.material = materialController.GetAimLineMaterial();
+        }
+        else
+        {
+            segmentLine.material = new Material(Shader.Find("Sprites/Default"));
+        }
+        
+        // 从材质中获取颜色和透明度
+        if (materialController != null && materialController.GetAimLineMaterial() != null)
+        {
+            Material aimMaterial = materialController.GetAimLineMaterial();
+            
+            // 尝试获取_Tint参数，如果没有则使用默认颜色
+            if (aimMaterial.HasProperty("_Tint"))
+            {
+                Color tintColor = aimMaterial.GetColor("_Tint");
+                segmentLine.startColor = tintColor;
+                segmentLine.endColor = tintColor;
+            }
+            else
+            {
+                // 如果没有_Tint参数，使用默认颜色
+                segmentLine.startColor = Color.yellow;
+                segmentLine.endColor = Color.yellow;
+            }
+        }
+        else
+        {
+            segmentLine.startColor = Color.yellow;
+            segmentLine.endColor = Color.yellow;
+        }
+        segmentLine.startWidth = 0.1f;
+        segmentLine.endWidth = 0.1f;
+        segmentLine.positionCount = 2; // 每个线段只有起点和终点
+        segmentLine.sortingOrder = 10;
+        segmentLine.useWorldSpace = true;
+        
+        // 设置Round Cap
+        segmentLine.numCapVertices = 8;
+        segmentLine.alignment = LineAlignment.TransformZ;
+        
+        return segmentLine;
+    }
+    
+    // 清除所有分段线段
+    void ClearSegmentLines()
+    {
+        foreach (LineRenderer line in segmentLines)
+        {
+            if (line != null)
+            {
+                DestroyImmediate(line.gameObject);
+            }
+        }
+        segmentLines.Clear();
+    }
+    
+    // 计算端点回退距离
+    float CalculateBackoff(Vector3 point1, Vector3 point2, Vector3 point3, float lineWidth)
+    {
+        // 计算两条线段的方向向量
+        Vector3 dir1 = (point2 - point1).normalized;
+        Vector3 dir2 = (point3 - point2).normalized;
+        
+        // 计算夹角（弧度）
+        float angle = Vector3.Angle(dir1, dir2) * Mathf.Deg2Rad;
+        
+        // 避免除零错误
+        if (angle < 0.01f)
+        {
+            return 0f;
+        }
+        
+        // 使用公式：backoff = 0.5 * width / tan(angle/2)
+        float backoff = 0.5f * lineWidth / Mathf.Tan(angle * 0.5f);
+        
+        return backoff;
+    }
+    
+    void InitializeReflectionCalculator()
+    {
+        // 如果没有设置反射计算器，尝试自动查找
+        if (reflectionCalculator == null)
+        {
+            reflectionCalculator = GetComponent<AimLineReflectionCalculator>();
+            if (reflectionCalculator == null)
+            {
+                reflectionCalculator = gameObject.AddComponent<AimLineReflectionCalculator>();
+                Debug.Log("TestAimController: 自动创建反射计算器组件");
+            }
+        }
+        
+        // 订阅反射计算器事件
+        if (reflectionCalculator != null)
+        {
+            var calculator = reflectionCalculator as AimLineReflectionCalculator;
+            if (calculator != null)
+            {
+                calculator.OnPathCalculated += OnReflectionPathCalculated;
+                Debug.Log("TestAimController: 反射计算器初始化完成");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("TestAimController: 反射计算器初始化失败");
+        }
+    }
+    
+    void OnReflectionPathCalculated(List<Vector3> pathPoints)
+    {
+        reflectionPath = new List<Vector3>(pathPoints);
+    }
+    
+    void InitializeMaterialController()
+    {
+        // 如果没有设置材质控制器，尝试自动查找
+        if (materialController == null)
+        {
+            materialController = GetComponent<AimLineMaterialController>();
+            if (materialController == null)
+            {
+                materialController = gameObject.AddComponent<AimLineMaterialController>();
+                Debug.Log("TestAimController: 自动创建材质控制器组件");
+            }
+        }
+        
+        if (materialController != null)
+        {
+            Debug.Log("TestAimController: 材质控制器初始化完成");
+        }
+        else
+        {
+            Debug.LogWarning("TestAimController: 材质控制器初始化失败");
+        }
+    }
+    
+    void HandleInput()
+    {
+        // 检查必要组件
+        if (whiteBall == null || cam == null)
+        {
+            return;
+        }
+        
+        // 检查白球是否在移动
+        if (whiteBall.IsMoving())
+        {
+            return;
+        }
+        
+        // 获取鼠标屏幕坐标
+        Vector3 mouseScreenPos = Input.mousePosition;
+        
+        // 转换为世界坐标
+        Vector3 mouseWorldPos = GetMouseWorldPosition(mouseScreenPos);
+        
+        // 计算瞄准方向 - 从白球指向鼠标的方向
+        Vector3 direction = mouseWorldPos - whiteBall.transform.position;
+        if (direction.magnitude > 0.1f) // 避免零向量
+        {
+            aimDirection = direction.normalized;
+        }
+        
+        // 处理蓄力和发射
+        if (Input.GetMouseButtonDown(0))
+        {
+            StartCharging();
+        }
+        else if (Input.GetMouseButton(0) && isCharging)
+        {
+            ContinueCharging();
+        }
+        else if (Input.GetMouseButtonUp(0) && isCharging)
+        {
+            LaunchBall();
+        }
+    }
+    
+    Vector3 GetMouseWorldPosition(Vector3 mouseScreenPos)
+    {
+        // 使用稳定的2D世界坐标转换方法
+        float screenWidth = Screen.width;
+        float screenHeight = Screen.height;
+        float cameraSize = cam.orthographicSize;
+        float aspectRatio = (float)screenWidth / screenHeight;
+        
+        float worldX = (mouseScreenPos.x / screenWidth - 0.5f) * cameraSize * aspectRatio * 2f;
+        float worldY = (mouseScreenPos.y / screenHeight - 0.5f) * cameraSize * 2f;
+        
+        return new Vector3(worldX, worldY, 0f);
+    }
+    
+    void StartCharging()
+    {
+        isCharging = true;
+        currentForce = useCyclingCharge ? minForce : 0f;
+        
+        // 显示蓄力条
+        if (chargeBarUI != null)
+        {
+            chargeBarUI.SetVisible(true);
+        }
+        
+        // 触发蓄力开始特效
+        EventTrigger.ChargeStart(whiteBall.transform.position, whiteBall.gameObject);
+    }
+    
+    void ContinueCharging()
+    {
+        if (useCyclingCharge)
+        {
+            // 循环蓄力：线性上升下降循环
+            float range = maxForce - minForce;
+            float cycleTime = 2f / chargeSpeed; // 一个完整循环的时间（上升+下降）
+            float time = Time.time % cycleTime;
+            
+            float cycleValue;
+            if (time < cycleTime * 0.5f)
+            {
+                // 上升阶段：从0到1
+                cycleValue = time / (cycleTime * 0.5f);
+            }
+            else
+            {
+                // 下降阶段：从1到0
+                cycleValue = 2f - (time / (cycleTime * 0.5f));
+            }
+            
+            currentForce = minForce + cycleValue * range;
+        }
+        else
+        {
+            // 传统蓄力：从0增长到最大值
+            currentForce += chargeSpeed * Time.deltaTime;
+            currentForce = Mathf.Clamp(currentForce, 0f, maxForce);
+        }
+        
+        // 更新蓄力条UI
+        if (chargeBarUI != null)
+        {
+            float normalizedValue = useCyclingCharge ? 
+                (currentForce - minForce) / (maxForce - minForce) : 
+                currentForce / maxForce;
+            chargeBarUI.UpdateCharge(normalizedValue);
+        }
+        
+        // 触发力度变化事件
+        OnForceChanged?.Invoke(useCyclingCharge ? 
+            (currentForce - minForce) / (maxForce - minForce) : 
+            currentForce / maxForce);
+    }
+    
+    void LaunchBall()
+    {
+        if (whiteBall != null)
+        {
+            Debug.Log($"发射白球: 方向={aimDirection}, 力度={currentForce}");
+            whiteBall.Launch(aimDirection, currentForce);
+            OnLaunch?.Invoke(aimDirection, currentForce);
+        }
+        
+        // 重置状态
+        isCharging = false;
+        currentForce = 0f;
+        
+        // 隐藏蓄力条
+        if (chargeBarUI != null)
+        {
+            chargeBarUI.SetVisible(false);
+        }
+        
+        // 触发事件
+        OnForceChanged?.Invoke(0f);
+        
+    }
+    
+    void UpdateAimLine()
+    {
+        // 检查白球是否在移动
+        if (whiteBall == null || whiteBall.IsMoving())
+        {
+            aimLine.positionCount = 0;
+            ClearSegmentLines(); // 清除分段线段
+            return;
+        }
+        
+        // 只有在蓄力时才显示瞄准线
+        if (!isCharging)
+        {
+            aimLine.positionCount = 0;
+            ClearSegmentLines(); // 清除分段线段
+            return;
+        }
+        
+        Vector3 startPos = whiteBall.transform.position;
+        
+        // 使用反射计算器计算路径
+        if (reflectionCalculator != null)
+        {
+            var calculator = reflectionCalculator as AimLineReflectionCalculator;
+            if (calculator != null)
+            {
+                // 获取白球半径
+                float ballRadius = 0.5f; // 默认半径
+                if (whiteBall != null)
+                {
+                    CircleCollider2D ballCollider = whiteBall.GetComponent<CircleCollider2D>();
+                    if (ballCollider != null)
+                    {
+                        ballRadius = ballCollider.radius;
+                    }
+                }
+                
+                List<Vector3> pathPoints = calculator.CalculateReflectionPath(startPos, aimDirection, ballRadius);
+                UpdateAimLineWithSegmentedReflection(pathPoints);
+            }
+            else
+            {
+                Debug.LogWarning("TestAimController: 反射计算器类型转换失败");
+                // 反射计算器失败时，使用简单瞄准线作为后备
+                UpdateSimpleAimLine(startPos);
+            }
+        }
+        else
+        {
+            Debug.LogWarning("TestAimController: 反射计算器未设置，使用简单瞄准线");
+            // 反射计算器未设置时，使用简单瞄准线
+            UpdateSimpleAimLine(startPos);
+        }
+    }
+    
+    void UpdateSimpleAimLine(Vector3 startPos)
+    {
+        // 使用固定长度的简单瞄准线
+        Vector3 endPos = startPos + (Vector3)aimDirection * aimLineLength;
+        aimLine.positionCount = 2;
+        aimLine.SetPosition(0, startPos);
+        aimLine.SetPosition(1, endPos);
+        
+        // 应用材质颜色和透明度
+        if (materialController != null && materialController.GetAimLineMaterial() != null)
+        {
+            Material aimMaterial = materialController.GetAimLineMaterial();
+            
+            // 尝试获取_Tint参数，如果没有则使用默认颜色
+            if (aimMaterial.HasProperty("_Tint"))
+            {
+                Color tintColor = aimMaterial.GetColor("_Tint");
+                aimLine.startColor = tintColor;
+                aimLine.endColor = tintColor;
+            }
+            else
+            {
+                // 如果没有_Tint参数，使用默认颜色
+                aimLine.startColor = Color.yellow;
+                aimLine.endColor = Color.yellow;
+            }
+            
+            // 为简单瞄准线应用淡出效果
+            float segmentLength = Vector3.Distance(startPos, endPos);
+            materialController.UpdateSegmentMaterial(aimLine, segmentLength, true);
+        }
+        
+        // 隐藏分段线段
+        ClearSegmentLines();
+    }
+    
+    void UpdateAimLineWithSegmentedReflection(List<Vector3> pathPoints)
+    {
+        if (pathPoints == null || pathPoints.Count <= 1)
+        {
+            aimLine.positionCount = 0;
+            ClearSegmentLines();
+            return;
+        }
+        
+        // 隐藏主瞄准线
+        aimLine.positionCount = 0;
+        
+        // 清除旧的分段线段
+        ClearSegmentLines();
+        
+        // 获取线条宽度
+        float lineWidth = aimLine.startWidth;
+        
+        // 根据路径点数创建分段
+        int segmentCount = pathPoints.Count - 1;
+        
+        for (int i = 0; i < segmentCount; i++)
+        {
+            // 创建分段线段
+            LineRenderer segmentLine = CreateSegmentLine(i);
+            segmentLines.Add(segmentLine);
+            
+            // 计算起点和终点
+            Vector3 startPoint = pathPoints[i];
+            Vector3 endPoint = pathPoints[i + 1];
+            
+            // 如果不是第一个线段，需要计算回退
+            if (i > 0)
+            {
+                Vector3 prevPoint = pathPoints[i - 1];
+                float backoff = CalculateBackoff(prevPoint, pathPoints[i], endPoint, lineWidth);
+                
+                // 第一个线段的终点回退
+                Vector3 direction = (pathPoints[i] - prevPoint).normalized;
+                startPoint = pathPoints[i] - direction * backoff;
+            }
+            
+            // 如果不是最后一个线段，需要计算回退
+            if (i < segmentCount - 1)
+            {
+                Vector3 nextPoint = pathPoints[i + 2];
+                float backoff = CalculateBackoff(pathPoints[i], pathPoints[i + 1], nextPoint, lineWidth);
+                
+                // 当前线段的终点回退
+                Vector3 direction = (pathPoints[i + 1] - pathPoints[i]).normalized;
+                endPoint = pathPoints[i + 1] - direction * backoff;
+            }
+            
+            // 设置分段线段的起点和终点
+            segmentLine.SetPosition(0, startPoint);
+            segmentLine.SetPosition(1, endPoint);
+            
+            // 应用材质效果（根据线段长度调整UScale）
+            if (materialController != null)
+            {
+                float segmentLength = Vector3.Distance(startPoint, endPoint);
+                
+                // 判断是否为最后一个线段，如果是则应用淡出效果
+                bool isLastSegment = (i == segmentCount - 1);
+                materialController.UpdateSegmentMaterial(segmentLine, segmentLength, isLastSegment);
+            }
+            
+        }
+    }
+    
+    
+    // 公共方法
+    public float GetCurrentForce()
+    {
+        return currentForce;
+    }
+    
+    public bool IsCharging()
+    {
+        return isCharging;
+    }
+    
+    public Vector2 GetAimDirection()
+    {
+        return aimDirection;
+    }
+    
+    // 手动设置白球引用（用于运行时动态设置）
+    public void SetWhiteBall(WhiteBall ball)
+    {
+        whiteBall = ball;
+        Debug.Log($"TestAimController: 设置白球引用为 {ball.name}");
+    }
+    
+    // 手动设置相机引用
+    public void SetCamera(Camera camera)
+    {
+        cam = camera;
+        Debug.Log($"TestAimController: 设置相机引用为 {camera.name}");
+    }
+    
+    // 重置控制器状态
+    public void ResetController()
+    {
+        isCharging = false;
+        currentForce = 0f;
+        aimDirection = Vector2.zero;
+        
+        if (chargeBarUI != null)
+        {
+            chargeBarUI.SetVisible(false);
+        }
+        
+        if (aimLine != null)
+        {
+            aimLine.positionCount = 0;
+        }
+        
+        // 清除分段线段
+        ClearSegmentLines();
+        
+        // 清除反射路径
+        if (reflectionCalculator != null)
+        {
+            var calculator = reflectionCalculator as AimLineReflectionCalculator;
+            if (calculator != null)
+            {
+                calculator.ClearPath();
+            }
+        }
+        
+        Debug.Log("TestAimController 状态已重置");
+    }
+    
+    // 反射相关方法
+    
+    public AimLineReflectionCalculator GetReflectionCalculator()
+    {
+        return reflectionCalculator as AimLineReflectionCalculator;
+    }
+    
+    public List<Vector3> GetCurrentReflectionPath()
+    {
+        return reflectionPath != null ? new List<Vector3>(reflectionPath) : new List<Vector3>();
+    }
+    
+    public string GetReflectionStats()
+    {
+        if (reflectionCalculator != null)
+        {
+            var calculator = reflectionCalculator as AimLineReflectionCalculator;
+            if (calculator != null)
+            {
+                return calculator.GetReflectionStats();
+            }
+        }
+        return "反射计算器未初始化";
+    }
+    
+    // 材质控制器相关方法
+    public AimLineMaterialController GetMaterialController()
+    {
+        return materialController;
+    }
+    
+    public void SetAimLineMaterial(Material material)
+    {
+        if (materialController != null)
+        {
+            materialController.SetAimLineMaterial(material);
+        }
+    }
+    
+    public void SetMaterialFlowEffect(bool enabled, float speed = 1f)
+    {
+        if (materialController != null)
+        {
+            materialController.SetFlowEffect(enabled, speed);
+        }
+    }
+    
+    public void ResetMaterialFlowTime()
+    {
+        if (materialController != null)
+        {
+            materialController.ResetFlowTime();
+        }
+    }
+    
+    public string GetMaterialStats()
+    {
+        if (materialController != null)
+        {
+            return materialController.GetMaterialStats();
+        }
+        return "材质控制器未初始化";
+    }
+}
