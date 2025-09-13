@@ -209,8 +209,7 @@ public class BallPhysics : MonoBehaviour
         BallPhysics otherBall = collision.gameObject.GetComponent<BallPhysics>();
         if (otherBall != null)
         {
-            // 通知PhysicsManager处理碰撞
-            PhysicsManager.Instance?.HandleBallCollision(this, otherBall);
+            // 触发球体碰撞事件
             OnBallCollision?.Invoke(this, otherBall);
         }
         

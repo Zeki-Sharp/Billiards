@@ -42,6 +42,10 @@ public class GameManager : MonoBehaviour
         {
             Instance = this;
             // 移除DontDestroyOnLoad，让GameManager在场景重新加载时被销毁
+            
+            // 设置全局物理参数
+            Physics2D.gravity = Vector2.zero; // 禁用重力，台球不受重力影响
+            Debug.Log("GameManager: 已禁用全局重力");
         }
         else
         {
