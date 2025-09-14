@@ -16,7 +16,8 @@ public static class EventTrigger
     /// <param name="direction">特效方向</param>
     /// <param name="attacker">攻击者</param>
     /// <param name="target">目标</param>
-    public static void Attack(string attackType, Vector3 position, Vector3 direction, GameObject attacker, GameObject target)
+    /// <param name="damage">伤害值（可选，默认为0）</param>
+    public static void Attack(string attackType, Vector3 position, Vector3 direction, GameObject attacker, GameObject target, float damage = 0f)
     {
         // 攻击者特效 - 发送给攻击者
         string attackEffectType = $"{attackType} Attack Effect";
