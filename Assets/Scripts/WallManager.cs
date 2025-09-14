@@ -123,19 +123,12 @@ public class WallManager : MonoBehaviour
                 positionOffset = positionController.CalculatePositionOffset(wallHitPosition, hitNormal, wallHitDirection, currentSpeed);
             }
             
-            // 使用墙壁自己的 EffectPlayer 播放墙壁受击特效
-            var wallEffectPlayer = GetComponentInChildren<EffectPlayer>();
-            if (wallEffectPlayer != null)
+            // 使用 EventTrigger 系统触发墙壁受击特效（带计算器参数）
+            EventTrigger.Attack("Hit", wallHitPosition, wallHitDirection, hitObject, wallTransform.gameObject, hitNormal, currentSpeed, rotationAngle, positionOffset);
+            
+            if (enableDebugLog)
             {
-                wallEffectPlayer.PlayEffect("Hit", wallHitPosition, wallHitDirection, hitNormal, currentSpeed, rotationAngle, positionOffset);
-                if (enableDebugLog)
-                {
-                    Debug.Log($"播放墙壁受击特效: {wallTransform.name} <- {hitObject.name}, 速度: {currentSpeed:F2}, 旋转角度: {rotationAngle:F2}, 位置偏移: {positionOffset}");
-                }
-            }
-            else
-            {
-                Debug.LogWarning($"墙壁 {wallTransform.name} 没有 EffectPlayer 组件，无法播放受击特效");
+                Debug.Log($"触发墙壁受击特效: {wallTransform.name} <- {hitObject.name}, 速度: {currentSpeed:F2}, 旋转角度: {rotationAngle:F2}, 位置偏移: {positionOffset}");
             }
             
             if (enableDebugLog)

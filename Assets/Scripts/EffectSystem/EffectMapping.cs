@@ -14,12 +14,17 @@ public static class EffectMapping
     {
         // 基础特效
         {"Hit", "Hit Effect"},
-        {"WallHit", "Wall Hit Effect"},
-        {"Launch", "Launch Effect"},
-        {"HoleEnter", "Dead Effect"},  // 进洞使用死亡特效
-        {"Attack", "Attack Effect"},
-        {"Dead", "Dead Effect"},
-        {"ChargeStart", "Charge Effect"},
+        {"Launch Effect", "Launch Effect"},
+        {"Hole Enter Effect", "Hole Enter Effect"},
+        {"Dead Effect", "Dead Effect"},
+        {"Charge Effect", "Charge Effect"},
+        
+        // 新的攻击特效映射
+        {"Hit Attack Effect", "Hit Attack Effect"},
+        {"Be Hit Effect", "Be Hit Effect"},
+        {"Skill Attack Effect", "Skill Attack Effect"},
+        {"Shoot Attack Effect", "Shoot Attack Effect"},
+        {"Magic Attack Effect", "Magic Attack Effect"},
         
         // 可以继续添加更多特效映射
         // {"NewEffect", "New Effect MMF Object Name"}

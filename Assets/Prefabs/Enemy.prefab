@@ -1148,7 +1148,7 @@ GameObject:
   - component: {fileID: 1609978568524643593}
   - component: {fileID: 2092718946212649161}
   m_Layer: 0
-  m_Name: Hit Effect
+  m_Name: Be Hit Effect
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2008,5 +2008,3 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enableDebugLog: 1
-  wallHitRotationController: {fileID: 0}
-  wallHitPositionController: {fileID: 0}

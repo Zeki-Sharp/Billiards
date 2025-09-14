@@ -88,7 +88,7 @@ public class Enemy : MonoBehaviour
             else
             {
                 // 如果不会死亡，播放受击特效
-                EventTrigger.Hit(hitPosition, hitDirection, gameObject);
+                EventTrigger.Attack("Hit", hitPosition, hitDirection, collision.gameObject, gameObject);
             }
             
             // 获取白球的 BallPhysics 组件

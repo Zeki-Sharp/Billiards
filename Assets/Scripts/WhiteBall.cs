@@ -137,9 +137,9 @@ public class WhiteBall : MonoBehaviour
             }
             
             // 触发白球撞击特效事件
-            Vector3 hitPosition = (transform.position + collision.transform.position) * 0.5f;
+            Vector3 hitPosition = collision.contacts[0].point;
             Vector3 hitDirection = (collision.transform.position - transform.position).normalized;
-            EventTrigger.Hit(hitPosition, hitDirection, collision.gameObject);
+            EventTrigger.Attack("Hit", hitPosition, hitDirection, this.gameObject, collision.gameObject);
             
             // 触发伤害事件
             Enemy enemy = collision.gameObject.GetComponent<Enemy>();

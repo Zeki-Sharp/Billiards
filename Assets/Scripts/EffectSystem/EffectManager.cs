@@ -121,7 +121,7 @@ public class EffectManager : MonoBehaviour, MMEventListener<EffectEvent>
     
     
     /// <summary>
-    /// 在目标对象及其子对象中查找 EffectPlayer 组件
+    /// 在目标对象及其子对象和父对象中查找 EffectPlayer 组件
     /// </summary>
     private EffectPlayer FindEffectPlayerInTarget(GameObject targetObject)
     {
@@ -145,7 +145,26 @@ public class EffectManager : MonoBehaviour, MMEventListener<EffectEvent>
         
         // 如果没找到，尝试在所有子对象中查找
         effectPlayer = targetObject.GetComponentInChildren<EffectPlayer>();
-        return effectPlayer;
+        if (effectPlayer != null)
+        {
+            return effectPlayer;
+        }
+        
+        // 如果还没找到，尝试在父对象中查找
+        Transform parent = targetObject.transform.parent;
+        while (parent != null)
+        {
+            effectPlayer = parent.GetComponentInChildren<EffectPlayer>();
+            if (effectPlayer != null)
+            {
+                Debug.Log($"在父对象 {parent.name} 中找到 EffectPlayer");
+                return effectPlayer;
+            }
+            parent = parent.parent;
+        }
+        
+        Debug.LogWarning($"在 {targetObject.name} 及其父对象中未找到 EffectPlayer");
+        return null;
     }
     
 }

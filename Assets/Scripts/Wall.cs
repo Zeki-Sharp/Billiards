@@ -42,8 +42,8 @@ public class Wall : MonoBehaviour
             Vector3 wallHitDirection = ((Vector2)hitObject.transform.position - collision.contacts[0].point).normalized;
             Vector3 hitNormal = collision.contacts[0].normal;
             
-            // 触发撞墙特效事件
-            EventTrigger.WallHit(wallHitPosition, wallHitDirection, hitObject, hitNormal, currentSpeed);
+            // 撞墙特效由攻击者（白球）触发，这里不需要重复触发
+            // 白球会在 WhiteBall.cs 中调用 EventTrigger.Attack("Hit", ...)
             
             // 更新最后撞墙时间
             lastHitTimes[hitObject] = Time.time;

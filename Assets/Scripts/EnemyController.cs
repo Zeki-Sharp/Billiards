@@ -327,7 +327,7 @@ public class EnemyController : MonoBehaviour
             Debug.Log($"白球受到 {hitCount} 个敌人攻击，总伤害: {totalDamage}");
             
             // 触发敌人攻击特效事件
-            EventTrigger.Attack(whiteBallPos, Vector3.zero, targetBall.gameObject);
+            EventTrigger.Attack("Skill", whiteBallPos, Vector3.zero, gameObject, targetBall.gameObject);
             
             targetBall.TakeDamage(totalDamage);
         }

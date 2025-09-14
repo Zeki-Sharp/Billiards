@@ -6,38 +6,64 @@ using UnityEngine;
 /// </summary>
 public static class EventTrigger
 {
-    #region 特效事件
+    #region 通用攻击方法
     
     /// <summary>
-    /// 触发撞击特效
+    /// 通用攻击特效 - 一次调用，双方都触发
     /// </summary>
-    public static void Hit(Vector3 position, Vector3 direction, GameObject target)
+    /// <param name="attackType">攻击类型：Hit, Shoot, Skill, Magic 等</param>
+    /// <param name="position">特效位置</param>
+    /// <param name="direction">特效方向</param>
+    /// <param name="attacker">攻击者</param>
+    /// <param name="target">目标</param>
+    public static void Attack(string attackType, Vector3 position, Vector3 direction, GameObject attacker, GameObject target)
     {
-        EffectEvent.Trigger("Hit", position, direction, target, "Enemy");
+        // 攻击者特效 - 发送给攻击者
+        string attackEffectType = $"{attackType} Attack Effect";
+        Debug.Log($"EventTrigger.Attack: 触发攻击者特效 {attackEffectType} -> {attacker.name}");
+        EffectEvent.Trigger(attackEffectType, position, direction, attacker, attacker.tag);
+        
+        // 受击者特效 - 发送给被攻击者
+        string beHitEffectType = "Be Hit Effect";
+        Debug.Log($"EventTrigger.Attack: 触发受击者特效 {beHitEffectType} -> {target.name}");
+        EffectEvent.Trigger(beHitEffectType, position, direction, target, target.tag);
     }
     
     /// <summary>
-    /// 触发撞击特效（带完整参数，用于墙壁受击等复杂特效）
+    /// 通用攻击特效 - 带完整参数版本（用于墙壁撞击等复杂特效）
     /// </summary>
-    public static void Hit(Vector3 position, Vector3 direction, GameObject target, Vector3 hitNormal, float speed, float rotationAngle = 0f, Vector3 positionOffset = default)
+    /// <param name="attackType">攻击类型：Hit, Shoot, Skill, Magic 等</param>
+    /// <param name="position">特效位置</param>
+    /// <param name="direction">特效方向</param>
+    /// <param name="attacker">攻击者</param>
+    /// <param name="target">目标</param>
+    /// <param name="hitNormal">撞击法线</param>
+    /// <param name="speed">撞击速度</param>
+    /// <param name="rotationAngle">旋转角度</param>
+    /// <param name="positionOffset">位置偏移</param>
+    public static void Attack(string attackType, Vector3 position, Vector3 direction, GameObject attacker, GameObject target, Vector3 hitNormal, float speed, float rotationAngle = 0f, Vector3 positionOffset = default)
     {
-        EffectEvent.Trigger("Hit", position, direction, target, "Wall", hitNormal, speed, rotationAngle, positionOffset);
+        // 攻击者特效 - 发送给攻击者
+        string attackEffectType = $"{attackType} Attack Effect";
+        Debug.Log($"EventTrigger.Attack: 触发攻击者特效 {attackEffectType} -> {attacker.name}");
+        EffectEvent.Trigger(attackEffectType, position, direction, attacker, attacker.tag);
+        
+        // 受击者特效 - 发送给被攻击者（带完整参数）
+        string beHitEffectType = "Be Hit Effect";
+        Debug.Log($"EventTrigger.Attack: 触发受击者特效 {beHitEffectType} -> {target.name} (带参数)");
+        EffectEvent.Trigger(beHitEffectType, position, direction, target, target.tag, hitNormal, speed, rotationAngle, positionOffset);
     }
     
-    /// <summary>
-    /// 触发撞墙特效
-    /// </summary>
-    public static void WallHit(Vector3 position, Vector3 direction, GameObject target, Vector3 hitNormal, float speed, float rotationAngle = 0f, Vector3 positionOffset = default)
-    {
-        EffectEvent.Trigger("WallHit", position, direction, target, "Wall", hitNormal, speed, rotationAngle, positionOffset);
-    }
+    #endregion
+    
+    #region 特殊特效方法（保留现有方法）
     
     /// <summary>
     /// 触发发射特效
     /// </summary>
     public static void Launch(Vector3 position, Vector3 direction, GameObject target)
     {
-        EffectEvent.Trigger("Launch", position, direction, target, "Player");
+        EffectEvent.Trigger("Launch Effect", position, direction, target, "Player");
     }
     
     /// <summary>
@@ -45,15 +71,7 @@ public static class EventTrigger
     /// </summary>
     public static void HoleEnter(Vector3 position, GameObject target)
     {
-        EffectEvent.Trigger("HoleEnter", position, Vector3.zero, target, "Player");
-    }
-    
-    /// <summary>
-    /// 触发攻击特效
-    /// </summary>
-    public static void Attack(Vector3 position, Vector3 direction, GameObject target)
-    {
-        EffectEvent.Trigger("Attack", position, direction, target, "Enemy");
+        EffectEvent.Trigger("Hole Enter Effect", position, Vector3.zero, target, "Player");
     }
     
     /// <summary>
@@ -61,7 +79,7 @@ public static class EventTrigger
     /// </summary>
     public static void Dead(Vector3 position, Vector3 direction, GameObject target)
     {
-        EffectEvent.Trigger("Dead", position, direction, target, "Enemy");
+        EffectEvent.Trigger("Dead Effect", position, direction, target, target.tag);
     }
     
     /// <summary>
@@ -69,7 +87,7 @@ public static class EventTrigger
     /// </summary>
     public static void ChargeStart(Vector3 position, GameObject target)
     {
-        EffectEvent.Trigger("ChargeStart", position, Vector3.zero, target, "Player");
+        EffectEvent.Trigger("Charge Effect", position, Vector3.zero, target, "Player");
     }
     
     #endregion

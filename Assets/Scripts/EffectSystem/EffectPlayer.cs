@@ -99,14 +99,20 @@ public class EffectPlayer : MonoBehaviour
             // 设置特效位置
             mmfPlayer.transform.position = position;
             
+            // 如果是 Hit Attack Effect，动态设置 Position 反馈的目标位置
+            if (effectType == "Hit Attack Effect")
+            {
+                SetPositionFeedbackTarget(mmfPlayer, position);
+            }
+            
             // 设置特效方向（如果有方向信息）
             if (direction != Vector3.zero)
             {
                 mmfPlayer.transform.rotation = Quaternion.LookRotation(direction);
             }
             
-            // 如果是墙面撞击特效或撞击特效，使用事件中传递的计算结果
-            if ((effectType == "WallHit" || effectType == "Hit") && hitNormal != Vector3.zero)
+            // 如果是撞击相关特效，使用事件中传递的计算结果
+            if ((effectType == "Hit Attack Effect" || effectType == "Be Hit Effect") && hitNormal != Vector3.zero)
             {
                 // 设置旋转角度（使用事件中的计算结果）
                 if (wallHitRotationAngle != 0f)
@@ -209,6 +215,38 @@ public class EffectPlayer : MonoBehaviour
         else
         {
             Debug.LogWarning($"MMF Player 不是 MMF_Player 类型，无法设置位置摇晃");
+        }
+    }
+    
+    /// <summary>
+    /// 设置 Position 反馈的目标位置
+    /// </summary>
+    private void SetPositionFeedbackTarget(MMFeedbacks mmfPlayer, Vector3 targetPosition)
+    {
+        // 将 MMFeedbacks 转换为 MMF_Player 来访问 GetFeedbackOfType 方法
+        if (mmfPlayer is MMF_Player mmfPlayerComponent)
+        {
+            // 查找 MMF_Position 反馈
+            var positionFeedback = mmfPlayerComponent.GetFeedbackOfType<MMF_Position>();
+            if (positionFeedback != null)
+            {
+                // 设置目标位置
+                positionFeedback.DestinationPosition = targetPosition;
+                positionFeedback.InitialPosition = targetPosition; // 立即出现在目标位置
+                
+                if (enableDebugLog)
+                    Debug.Log($"设置 Position 反馈目标位置: {targetPosition}");
+            }
+            else
+            {
+                if (enableDebugLog)
+                    Debug.LogWarning($"未找到 MMF_Position 反馈，无法设置目标位置");
+            }
+        }
+        else
+        {
+            if (enableDebugLog)
+                Debug.LogWarning($"MMF Player 不是 MMF_Player 类型，无法设置目标位置");
         }
     }
     
