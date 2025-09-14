@@ -3,9 +3,9 @@ using MoreMountains.Tools;
 
 /// <summary>
 /// 特效管理器 - 纯事件监听器
-/// 监听MMEventManager的特效事件，分发全局特效和对象特效
+/// 监听MMEventManager的特效事件和攻击事件，分发全局特效和对象特效
 /// </summary>
-public class EffectManager : MonoBehaviour, MMEventListener<EffectEvent>
+public class EffectManager : MonoBehaviour, MMEventListener<EffectEvent>, MMEventListener<AttackEvent>
 {
     public static EffectManager Instance { get; private set; }
     
@@ -59,10 +59,11 @@ public class EffectManager : MonoBehaviour, MMEventListener<EffectEvent>
     
     void OnEnable()
     {
-        // 订阅MMEventManager的特效事件
+        // 订阅MMEventManager的特效事件和攻击事件
         this.MMEventStartListening<EffectEvent>();
+        this.MMEventStartListening<AttackEvent>();
         if (enableDebugLog)
-            Debug.Log("EffectManager 已订阅 MMEventManager 特效事件");
+            Debug.Log("EffectManager 已订阅 MMEventManager 特效事件和攻击事件");
     }
     
     void Start()
@@ -77,24 +78,26 @@ public class EffectManager : MonoBehaviour, MMEventListener<EffectEvent>
     
     void OnDisable()
     {
-        // 取消订阅MMEventManager的特效事件
+        // 取消订阅MMEventManager的特效事件和攻击事件
         this.MMEventStopListening<EffectEvent>();
+        this.MMEventStopListening<AttackEvent>();
     }
     
     /// <summary>
     /// 处理特效事件（MMEventListener接口实现）
+    /// 用于非攻击相关的特效
     /// </summary>
     public void OnMMEvent(EffectEvent effectEvent)
     {
         if (enableDebugLog)
             Debug.Log($"EffectManager接收到特效事件: {effectEvent.EffectType} at {effectEvent.Position}");
         
-        // 播放全局特效
+        // 播放全局特效（简化版本，不包含撞墙参数）
         if (globalEffectPlayer != null)
         {
-            globalEffectPlayer.PlayEffect(effectEvent.EffectType, effectEvent.Position, effectEvent.Direction, effectEvent.HitNormal, effectEvent.HitSpeed, effectEvent.WallHitRotationAngle, effectEvent.WallHitPositionOffset);
+            globalEffectPlayer.PlayEffect(effectEvent.EffectType, effectEvent.Position, effectEvent.Direction, Vector3.zero, 0f, 0f, Vector3.zero);
             if (enableDebugLog)
-                Debug.Log($"播放全局{effectEvent.EffectType}特效 at {effectEvent.Position}, 速度: {effectEvent.HitSpeed:F2}");
+                Debug.Log($"播放全局{effectEvent.EffectType}特效 at {effectEvent.Position}");
         }
         else
         {
@@ -102,15 +105,15 @@ public class EffectManager : MonoBehaviour, MMEventListener<EffectEvent>
                 Debug.LogWarning($"全局特效播放器为null，无法播放全局{effectEvent.EffectType}特效");
         }
         
-        // 播放目标对象特效
+        // 播放目标对象特效（简化版本，不包含撞墙参数）
         if (effectEvent.TargetObject != null)
         {
             var objectEffectPlayer = FindEffectPlayerInTarget(effectEvent.TargetObject);
             if (objectEffectPlayer != null)
             {
-                objectEffectPlayer.PlayEffect(effectEvent.EffectType, effectEvent.Position, effectEvent.Direction, effectEvent.HitNormal, effectEvent.HitSpeed, effectEvent.WallHitRotationAngle, effectEvent.WallHitPositionOffset);
+                objectEffectPlayer.PlayEffect(effectEvent.EffectType, effectEvent.Position, effectEvent.Direction, Vector3.zero, 0f, 0f, Vector3.zero);
                 if (enableDebugLog)
-                    Debug.Log($"播放对象{effectEvent.EffectType}特效 - {effectEvent.TargetObject.name} at {effectEvent.Position}, 速度: {effectEvent.HitSpeed:F2}");
+                    Debug.Log($"播放对象{effectEvent.EffectType}特效 - {effectEvent.TargetObject.name} at {effectEvent.Position}");
             }
             else
             {
@@ -119,6 +122,65 @@ public class EffectManager : MonoBehaviour, MMEventListener<EffectEvent>
         }
     }
     
+    /// <summary>
+    /// 处理攻击事件（MMEventListener接口实现）
+    /// 直接使用 AttackEvent 参数播放特效，避免重复传递
+    /// </summary>
+    public void OnMMEvent(AttackEvent attackEvent)
+    {
+        if (enableDebugLog)
+        {
+            Debug.Log($"EffectManager 收到攻击事件: {attackEvent.AttackType} -> {attackEvent.Attacker?.name} 攻击 {attackEvent.Target?.name}");
+        }
+        
+        // 播放攻击者特效
+        string attackEffectType = $"{attackEvent.AttackType} Attack Effect";
+        PlayEffectDirectly(attackEffectType, attackEvent.Position, attackEvent.Direction, attackEvent.Attacker, attackEvent.AttackerTag, attackEvent);
+        
+        // 播放受击者特效
+        string beHitEffectType = "Be Hit Effect";
+        PlayEffectDirectly(beHitEffectType, attackEvent.Position, attackEvent.Direction, attackEvent.Target, attackEvent.TargetTag, attackEvent);
+        
+        if (enableDebugLog)
+        {
+            Debug.Log($"EffectManager 已播放特效: {attackEffectType} 和 {beHitEffectType}");
+        }
+    }
+    
+    /// <summary>
+    /// 直接播放特效，使用 AttackEvent 的所有参数
+    /// </summary>
+    private void PlayEffectDirectly(string effectType, Vector3 position, Vector3 direction, GameObject targetObject, string targetTag, AttackEvent attackEvent)
+    {
+        // 播放全局特效
+        if (globalEffectPlayer != null)
+        {
+            globalEffectPlayer.PlayEffect(effectType, position, direction, attackEvent.HitNormal, attackEvent.HitSpeed, attackEvent.WallHitRotationAngle, attackEvent.WallHitPositionOffset);
+            if (enableDebugLog)
+                Debug.Log($"播放全局{effectType}特效 at {position}, 速度: {attackEvent.HitSpeed:F2}");
+        }
+        else
+        {
+            if (enableDebugLog)
+                Debug.LogWarning($"全局特效播放器为null，无法播放全局{effectType}特效");
+        }
+        
+        // 播放目标对象特效
+        if (targetObject != null)
+        {
+            var objectEffectPlayer = FindEffectPlayerInTarget(targetObject);
+            if (objectEffectPlayer != null)
+            {
+                objectEffectPlayer.PlayEffect(effectType, position, direction, attackEvent.HitNormal, attackEvent.HitSpeed, attackEvent.WallHitRotationAngle, attackEvent.WallHitPositionOffset);
+                if (enableDebugLog)
+                    Debug.Log($"播放对象{effectType}特效 - {targetObject.name} at {position}, 速度: {attackEvent.HitSpeed:F2}");
+            }
+            else
+            {
+                Debug.LogWarning($"目标对象 {targetObject.name} 及其子对象上没有EffectPlayer组件");
+            }
+        }
+    }
     
     /// <summary>
     /// 在目标对象及其子对象和父对象中查找 EffectPlayer 组件

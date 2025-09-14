@@ -7,9 +7,9 @@ using MoreMountains.Feedbacks;
 /// <summary>
 /// 伤害数字管理器
 /// 负责全局伤害数字的生成、回收和对象池管理
-/// 直接使用 MMGameEvent 系统监听 "DamageText" 事件
+/// 监听 AttackEvent 系统，当有伤害值时显示伤害数字
 /// </summary>
-public class DamageTextManager : MonoBehaviour, MMEventListener<MMGameEvent>
+public class DamageTextManager : MonoBehaviour, MMEventListener<AttackEvent>
 {
     public static DamageTextManager Instance { get; private set; }
     
@@ -64,12 +64,12 @@ public class DamageTextManager : MonoBehaviour, MMEventListener<MMGameEvent>
     
     void OnEnable()
     {
-        this.MMEventStartListening<MMGameEvent>();
+        this.MMEventStartListening<AttackEvent>();
     }
     
     void OnDisable()
     {
-        this.MMEventStopListening<MMGameEvent>();
+        this.MMEventStopListening<AttackEvent>();
     }
     
     /// <summary>
@@ -407,19 +407,33 @@ public class DamageTextManager : MonoBehaviour, MMEventListener<MMGameEvent>
     
     
     /// <summary>
-    /// 事件监听 - 处理 MMGameEvent 中的伤害数字事件
+    /// 事件监听 - 处理 AttackEvent 中的伤害数字事件
     /// </summary>
-    /// <param name="gameEvent">游戏事件</param>
-    public void OnMMEvent(MMGameEvent gameEvent)
+    /// <param name="attackEvent">攻击事件</param>
+    public void OnMMEvent(AttackEvent attackEvent)
     {
-        // 检查是否是伤害数字事件
-        if (gameEvent.EventName == "DamageText")
+        if (enableDebugLog)
         {
-            // 恢复伤害值精度（除以100）
-            float damage = gameEvent.IntParameter / 100f;
-            
+            Debug.Log($"DamageTextManager: 收到攻击事件，攻击类型: {attackEvent.AttackType}, 伤害值: {attackEvent.Damage}, 位置: {attackEvent.Position}, 目标: {attackEvent.Target?.name}");
+        }
+        
+        // 检查是否有伤害值且大于0
+        if (attackEvent.Damage > 0f)
+        {
             // 显示伤害数字
-            ShowDamageText(gameEvent.Vector3Parameter, damage, null);
+            ShowDamageText(attackEvent.Position, attackEvent.Damage, attackEvent.Target);
+            
+            if (enableDebugLog)
+            {
+                Debug.Log($"DamageTextManager: 显示伤害数字 {attackEvent.Damage} 在位置 {attackEvent.Position}");
+            }
+        }
+        else
+        {
+            if (enableDebugLog)
+            {
+                Debug.Log($"DamageTextManager: 伤害值为 {attackEvent.Damage}，不显示伤害数字");
+            }
         }
     }
     

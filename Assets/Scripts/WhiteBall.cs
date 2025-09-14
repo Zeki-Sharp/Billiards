@@ -1,11 +1,12 @@
 using UnityEngine;
 using UnityEngine.UI;
+using MoreMountains.Tools;
 
 
 /// <summary>
 /// 白球脚本 - 负责白球的物理逻辑和碰撞逻辑
 /// </summary>
-public class WhiteBall : MonoBehaviour
+public class WhiteBall : MonoBehaviour, MMEventListener<AttackEvent>
 {
     [Header("数据设置")]
     public BallData ballData; // 物理数据
@@ -47,6 +48,16 @@ public class WhiteBall : MonoBehaviour
         
         // 初始化血条
         InitializeHealthBar();
+    }
+    
+    void OnEnable()
+    {
+        this.MMEventStartListening<AttackEvent>();
+    }
+    
+    void OnDisable()
+    {
+        this.MMEventStopListening<AttackEvent>();
     }
     
     void Update()
@@ -318,6 +329,22 @@ public class WhiteBall : MonoBehaviour
     public bool IsAlive()
     {
         return currentHealth > 0;
+    }
+    
+    /// <summary>
+    /// 处理攻击事件（MMEventListener接口实现）
+    /// 当自己是攻击目标时处理伤害
+    /// </summary>
+    public void OnMMEvent(AttackEvent attackEvent)
+    {
+        // 检查自己是否是攻击目标
+        if (attackEvent.Target == gameObject && attackEvent.Damage > 0f)
+        {
+            Debug.Log($"WhiteBall 收到攻击事件，伤害: {attackEvent.Damage}");
+            
+            // 处理伤害
+            TakeDamage(attackEvent.Damage);
+        }
     }
     
     public void ResetForNewTurn()

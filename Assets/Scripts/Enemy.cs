@@ -1,7 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
+using MoreMountains.Tools;
 
-public class Enemy : MonoBehaviour
+public class Enemy : MonoBehaviour, MMEventListener<AttackEvent>
 {
     [Header("数据设置")]
     public BallData ballData; // 物理数据
@@ -47,6 +48,16 @@ public class Enemy : MonoBehaviour
         InitializeHealthBar();
     }
     
+    void OnEnable()
+    {
+        this.MMEventStartListening<AttackEvent>();
+    }
+    
+    void OnDisable()
+    {
+        this.MMEventStopListening<AttackEvent>();
+    }
+    
     public void InitializeAttackRange()
     {
         AttackRange attackRange = GetComponentInChildren<AttackRange>();
@@ -72,24 +83,13 @@ public class Enemy : MonoBehaviour
                 return;
             }
             
-            // 先计算伤害，判断是否死亡
+            // 计算伤害和碰撞信息
             float damage = combatData != null ? combatData.damage : 50f;
-            bool willDie = (currentHealth - damage) <= 0;
-            
-            // 计算碰撞位置和方向
             Vector3 hitPosition = (transform.position + collision.transform.position) * 0.5f;
             Vector3 hitDirection = (transform.position - collision.transform.position).normalized;
             
-            if (willDie)
-            {
-                // 如果会死亡，只播放死亡特效
-                EventTrigger.Dead(hitPosition, hitDirection, gameObject);
-            }
-            else
-            {
-                // 如果不会死亡，播放受击特效
-                EventTrigger.Attack("Hit", hitPosition, hitDirection, collision.gameObject, gameObject);
-            }
+            // 触发攻击事件，伤害处理由事件监听器处理
+            EventTrigger.Attack("Hit", hitPosition, hitDirection, collision.gameObject, gameObject, damage);
             
             // 获取白球的 BallPhysics 组件
             BallPhysics whiteBallPhysics = collision.gameObject.GetComponent<BallPhysics>();
@@ -180,6 +180,22 @@ public class Enemy : MonoBehaviour
 
         // 注意：死亡特效已在OnCollisionEnter2D中发布，避免重复发布
         // EventBus.PublishEffect("EnemyDead", transform.position, Vector3.zero, gameObject, "Enemy");
+    }
+    
+    /// <summary>
+    /// 处理攻击事件（MMEventListener接口实现）
+    /// 当自己是攻击目标时处理伤害
+    /// </summary>
+    public void OnMMEvent(AttackEvent attackEvent)
+    {
+        // 检查自己是否是攻击目标
+        if (attackEvent.Target == gameObject && attackEvent.Damage > 0f)
+        {
+            Debug.Log($"Enemy {name} 收到攻击事件，伤害: {attackEvent.Damage}");
+            
+            // 处理伤害
+            TakeDamage(attackEvent.Damage);
+        }
     }
     
     public float GetHealthPercentage()
