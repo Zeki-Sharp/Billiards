@@ -110,6 +110,41 @@ public struct AttackEvent
     }
 }
 
+/// <summary>
+/// 死亡事件定义
+/// 负责死亡相关的游戏逻辑，包括特效播放、对象销毁、状态更新等
+/// </summary>
+public struct DeathEvent
+{
+    public string DeathType;        // 死亡类型：EnemyDeath, PlayerDeath等
+    public Vector3 Position;        // 死亡位置
+    public Vector3 Direction;       // 死亡方向（可选）
+    public GameObject DeadObject;   // 死亡对象
+    public string DeadObjectTag;    // 死亡对象标签
+    public float DeathTime;         // 死亡时间戳
+    
+    /// <summary>
+    /// 触发死亡事件
+    /// </summary>
+    public static void Trigger(string deathType, Vector3 position, Vector3 direction, GameObject deadObject)
+    {
+        Debug.Log($"DeathEvent.Trigger: 创建死亡事件，类型: {deathType}, 对象: {deadObject?.name}");
+        
+        var deathEvent = new DeathEvent
+        {
+            DeathType = deathType,
+            Position = position,
+            Direction = direction,
+            DeadObject = deadObject,
+            DeadObjectTag = deadObject != null ? deadObject.tag : "",
+            DeathTime = Time.time
+        };
+        
+        Debug.Log($"DeathEvent.Trigger: 通过 MMEventManager 触发死亡事件");
+        MoreMountains.Tools.MMEventManager.TriggerEvent(deathEvent);
+    }
+}
+
 public struct GameStateEvent
 {
     public string StateName;         // 状态名称：PhaseChanged, HealthChanged等

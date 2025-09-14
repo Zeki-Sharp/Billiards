@@ -8,10 +8,13 @@ public class Enemy : MonoBehaviour, MMEventListener<AttackEvent>
     public BallData ballData; // 物理数据
     public BallCombatData combatData; // 战斗数据
     
-    // 注意：撞墙特效现在由WallManager统一管理
     
     private float currentHealth;
     private WhiteBall targetBall;
+    
+    // 防重复触发机制
+    private float lastAttackTime = 0f;
+    private const float ATTACK_COOLDOWN = 0.1f; // 0.1秒冷却时间
     private BallPhysics ballPhysics;
     private HealthBar healthBar; // 血条组件
     
@@ -76,17 +79,34 @@ public class Enemy : MonoBehaviour, MMEventListener<AttackEvent>
         // 被白球撞击时的处理
         if (collision.gameObject.CompareTag("Player"))
         {
+            Debug.Log($"Enemy {name} 被白球撞击 - 碰撞体: {collision.collider.name}, 时间: {Time.time}");
+            
+            // 防重复触发检查
+            if (Time.time - lastAttackTime < ATTACK_COOLDOWN)
+            {
+                Debug.Log($"Enemy {name} 攻击冷却中，忽略重复触发");
+                return;
+            }
+            
             // 检查当前游戏阶段，只有在非敌人阶段时才受伤
             GameManager gameManager = GameManager.Instance;
             if (gameManager != null && gameManager.GetCurrentPhase() == GameManager.GamePhase.EnemyPhase)
             {
+                Debug.Log($"Enemy {name} 在敌人阶段，不受伤");
                 return;
             }
             
+            // 更新最后攻击时间
+            lastAttackTime = Time.time;
+            
             // 计算伤害和碰撞信息
-            float damage = combatData != null ? combatData.damage : 50f;
+            // 白球攻击敌人，应该使用白球的伤害值
+            WhiteBall whiteBall = collision.gameObject.GetComponent<WhiteBall>();
+            float damage = whiteBall != null && whiteBall.combatData != null ? whiteBall.combatData.damage : 50f;
             Vector3 hitPosition = (transform.position + collision.transform.position) * 0.5f;
             Vector3 hitDirection = (transform.position - collision.transform.position).normalized;
+            
+            Debug.Log($"Enemy {name} 被白球攻击，白球伤害: {damage}, 碰撞体: {collision.collider.name}");
             
             // 触发攻击事件，伤害处理由事件监听器处理
             EventTrigger.Attack("Hit", hitPosition, hitDirection, collision.gameObject, gameObject, damage);
@@ -112,8 +132,6 @@ public class Enemy : MonoBehaviour, MMEventListener<AttackEvent>
                 }
             }
             
-            // 最后应用伤害
-            TakeDamage(damage);
         }
         
         // 撞墙时的处理
@@ -135,19 +153,20 @@ public class Enemy : MonoBehaviour, MMEventListener<AttackEvent>
     
     public void TakeDamage(float damage)
     {
+        float oldHealth = currentHealth;
         currentHealth -= damage;
         currentHealth = Mathf.Max(0, currentHealth);
-        Debug.Log($"敌人受到伤害: {damage}, 当前血量: {currentHealth}");
         
+        float maxHealth = combatData != null ? combatData.maxHealth : 100f;
         // 更新血条
         if (healthBar != null)
         {
-            healthBar.UpdateHealth(currentHealth, combatData != null ? combatData.maxHealth : 100f);
+            healthBar.UpdateHealth(currentHealth, maxHealth);
         }
         
-        OnHealthChanged?.Invoke(currentHealth / (combatData != null ? combatData.maxHealth : 100f));
+        OnHealthChanged?.Invoke(currentHealth / maxHealth);
         
-        // 注意：死亡检查已移至OnCollisionEnter2D中，避免特效冲突
+        // 检查死亡
         if (currentHealth <= 0)
         {
             Die();
@@ -170,16 +189,22 @@ public class Enemy : MonoBehaviour, MMEventListener<AttackEvent>
     }
     
     void Die()
-    {
+    { 
+        Debug.Log($"敌人 {name} 开始死亡流程");
+        
         // 禁用碰撞器，停止与白球的物理交互
         Collider2D collider = GetComponent<Collider2D>();
         if (collider != null)
         {
             collider.enabled = false;
+            Debug.Log($"敌人 {name} 碰撞器已禁用");
         }
 
-        // 注意：死亡特效已在OnCollisionEnter2D中发布，避免重复发布
-        // EventBus.PublishEffect("EnemyDead", transform.position, Vector3.zero, gameObject, "Enemy");
+        // 触发死亡特效
+        Debug.Log($"敌人 {name} 触发死亡事件");
+        EventTrigger.Dead(transform.position, Vector3.zero, gameObject);
+        
+        Debug.Log($"敌人 {name} 死亡流程完成");
     }
     
     /// <summary>
@@ -188,13 +213,19 @@ public class Enemy : MonoBehaviour, MMEventListener<AttackEvent>
     /// </summary>
     public void OnMMEvent(AttackEvent attackEvent)
     {
+        Debug.Log($"Enemy {name} 收到攻击事件: 目标={attackEvent.Target?.name}, 伤害={attackEvent.Damage}, 自己={gameObject.name}");
+        
         // 检查自己是否是攻击目标
         if (attackEvent.Target == gameObject && attackEvent.Damage > 0f)
         {
-            Debug.Log($"Enemy {name} 收到攻击事件，伤害: {attackEvent.Damage}");
+            Debug.Log($"Enemy {name} 是攻击目标，处理伤害: {attackEvent.Damage}");
             
             // 处理伤害
             TakeDamage(attackEvent.Damage);
+        }
+        else
+        {
+            Debug.Log($"Enemy {name} 不是攻击目标或伤害为0，忽略");
         }
     }
     

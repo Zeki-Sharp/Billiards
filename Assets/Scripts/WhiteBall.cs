@@ -147,19 +147,7 @@ public class WhiteBall : MonoBehaviour, MMEventListener<AttackEvent>
                 }
             }
             
-            // 触发白球撞击特效事件
-            Vector3 hitPosition = collision.contacts[0].point;
-            Vector3 hitDirection = (collision.transform.position - transform.position).normalized;
-            EventTrigger.Attack("Hit", hitPosition, hitDirection, this.gameObject, collision.gameObject);
-            
-            // 触发伤害事件
-            Enemy enemy = collision.gameObject.GetComponent<Enemy>();
-            if (enemy != null)
-            {
-                float damage = combatData != null ? combatData.damage : 1f;
-                enemy.TakeDamage(damage);
-                Debug.Log($"白球对敌人造成伤害: {damage}");
-            }
+            // 攻击事件和伤害处理由 Enemy.OnCollisionEnter2D 统一处理
         }
         
         // 撞击边界时的处理

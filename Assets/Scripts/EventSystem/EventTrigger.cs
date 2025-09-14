@@ -73,11 +73,12 @@ public static class EventTrigger
     }
     
     /// <summary>
-    /// 触发死亡特效
+    /// 触发死亡事件
     /// </summary>
     public static void Dead(Vector3 position, Vector3 direction, GameObject target)
     {
-        EffectEvent.Trigger("Dead Effect", position, direction, target, target.tag);
+        Debug.Log($"EventTrigger.Dead: 触发死亡事件，目标: {target?.name}");
+        DeathEvent.Trigger("EnemyDeath", position, direction, target);
     }
     
     /// <summary>

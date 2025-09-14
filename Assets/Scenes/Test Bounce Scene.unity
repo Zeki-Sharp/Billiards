@@ -664,37 +664,6 @@ Transform:
   - {fileID: 1668435850}
   m_Father: {fileID: 551118086}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &459862820
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 459862821}
-  m_Layer: 0
-  m_Name: TextDamage
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &459862821
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 459862820}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1787785598}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &497269588 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 710692218524571458, guid: 2d86053af5e50c446a06f75cbdecb65b, type: 3}
@@ -8181,6 +8150,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   config: {fileID: 11400000, guid: de5028ade9c5a99479cbe5b2833d6ce5, type: 2}
+  upwardOffset: 0
+  rightwardOffset: 0.9
   damageTextPrefab: {fileID: 3303728442457195999, guid: e6e8d9e57a5851244a7a00861628677c, type: 3}
   canvasSortOrder: 100
   referenceResolution: {x: 1920, y: 1080}
@@ -9278,7 +9249,6 @@ Transform:
   m_Children:
   - {fileID: 57050827}
   - {fileID: 38867660}
-  - {fileID: 459862821}
   - {fileID: 1360613285}
   - {fileID: 1354289661}
   m_Father: {fileID: 0}

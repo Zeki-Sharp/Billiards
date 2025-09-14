@@ -17,6 +17,12 @@ public class DamageTextManager : MonoBehaviour, MMEventListener<AttackEvent>
     [Tooltip("伤害数字配置")]
     public DamageTextConfig config;
     
+    [Header("位置偏移设置")]
+    [Tooltip("向上偏移量（世界单位）")]
+    public float upwardOffset = 0f;
+    [Tooltip("向右偏移量（世界单位）")]
+    public float rightwardOffset = 0.6f;
+    
     [Header("预制体")]
     [Tooltip("伤害数字预制体")]
     public GameObject damageTextPrefab;
@@ -298,113 +304,30 @@ public class DamageTextManager : MonoBehaviour, MMEventListener<AttackEvent>
     /// <returns>屏幕坐标位置</returns>
     private Vector3 GetFinalScreenPosition(Vector3 worldPosition, GameObject target)
     {
-        Vector3 finalWorldPosition = worldPosition;
-        
-        // 如果有目标对象，使用 Anchor 方案获取位置
+        // 使用目标对象的固定位置，而不是攻击位置
+        Vector3 finalWorldPosition;
         if (target != null)
         {
-            finalWorldPosition = GetTargetAnchorPosition(target);
+            // 使用目标对象的中心位置，添加可调整的偏移
+            finalWorldPosition = target.transform.position;
+            finalWorldPosition.y += upwardOffset; // 可调整的向上偏移
+            finalWorldPosition.x += rightwardOffset; // 可调整的向右偏移
+        }
+        else
+        {
+            // 如果没有目标对象，使用传入的世界位置
+            finalWorldPosition = worldPosition;
+            finalWorldPosition.y += upwardOffset;
+            finalWorldPosition.x += rightwardOffset;
         }
         
         // 转换为屏幕坐标
         Vector3 screenPosition = targetCamera.WorldToScreenPoint(finalWorldPosition);
         
-        // 添加随机偏移
-        screenPosition = AddRandomOffset(screenPosition);
         
-        // 处理边缘检测
-        if (config != null && config.enableEdgeDetection)
-        {
-            screenPosition = AdjustScreenPositionForBounds(screenPosition);
-        }
         
         return screenPosition;
     }
-    
-    /// <summary>
-    /// 获取目标物体的 Anchor 位置
-    /// </summary>
-    /// <param name="target">目标对象</param>
-    /// <returns>世界坐标位置</returns>
-    private Vector3 GetTargetAnchorPosition(GameObject target)
-    {
-        Vector3 basePosition = target.transform.position;
-        
-        if (config == null) return basePosition;
-        
-        // 如果启用使用包围盒高度
-        if (config.useTargetBounds)
-        {
-            float targetHeight = GetTargetHeight(target);
-            basePosition.y += targetHeight * config.boundsHeightMultiplier;
-        }
-        
-        // 添加配置的 Anchor 偏移
-        basePosition += config.anchorOffset;
-        
-        return basePosition;
-    }
-    
-    /// <summary>
-    /// 获取目标物体的高度
-    /// </summary>
-    /// <param name="target">目标对象</param>
-    /// <returns>高度值</returns>
-    private float GetTargetHeight(GameObject target)
-    {
-        // 优先使用 Renderer 的包围盒高度
-        Renderer renderer = target.GetComponent<Renderer>();
-        if (renderer != null)
-        {
-            return renderer.bounds.extents.y;
-        }
-        
-        // 使用 Collider 的包围盒高度
-        Collider collider = target.GetComponent<Collider>();
-        if (collider != null)
-        {
-            return collider.bounds.extents.y;
-        }
-        
-        // 默认高度
-        return 1f;
-    }
-    
-    /// <summary>
-    /// 添加随机偏移
-    /// </summary>
-    /// <param name="screenPosition">屏幕坐标</param>
-    /// <returns>添加随机偏移后的屏幕坐标</returns>
-    private Vector3 AddRandomOffset(Vector3 screenPosition)
-    {
-        if (config == null) return screenPosition;
-        
-        float randomRange = Random.Range(config.minRandomOffset, config.maxRandomOffset);
-        Vector2 randomOffset = Random.insideUnitCircle * randomRange;
-        
-        return screenPosition + new Vector3(randomOffset.x, randomOffset.y, 0);
-    }
-    
-    /// <summary>
-    /// 调整屏幕位置以适应边界
-    /// </summary>
-    /// <param name="screenPosition">屏幕坐标</param>
-    /// <returns>调整后的屏幕坐标</returns>
-    private Vector3 AdjustScreenPositionForBounds(Vector3 screenPosition)
-    {
-        if (config == null) return screenPosition;
-        
-        float screenWidth = Screen.width;
-        float screenHeight = Screen.height;
-        float margin = config.screenMargin;
-        
-        // 调整位置
-        screenPosition.x = Mathf.Clamp(screenPosition.x, margin, screenWidth - margin);
-        screenPosition.y = Mathf.Clamp(screenPosition.y, margin, screenHeight - margin);
-        
-        return screenPosition;
-    }
-    
     
     /// <summary>
     /// 事件监听 - 处理 AttackEvent 中的伤害数字事件

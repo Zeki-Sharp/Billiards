@@ -5,7 +5,7 @@ using MoreMountains.Tools;
 /// 特效管理器 - 纯事件监听器
 /// 监听MMEventManager的特效事件和攻击事件，分发全局特效和对象特效
 /// </summary>
-public class EffectManager : MonoBehaviour, MMEventListener<EffectEvent>, MMEventListener<AttackEvent>
+public class EffectManager : MonoBehaviour, MMEventListener<EffectEvent>, MMEventListener<AttackEvent>, MMEventListener<DeathEvent>
 {
     public static EffectManager Instance { get; private set; }
     
@@ -59,11 +59,15 @@ public class EffectManager : MonoBehaviour, MMEventListener<EffectEvent>, MMEven
     
     void OnEnable()
     {
-        // 订阅MMEventManager的特效事件和攻击事件
+        // 订阅MMEventManager的特效事件、攻击事件和死亡事件
         this.MMEventStartListening<EffectEvent>();
         this.MMEventStartListening<AttackEvent>();
+        this.MMEventStartListening<DeathEvent>();
         if (enableDebugLog)
-            Debug.Log("EffectManager 已订阅 MMEventManager 特效事件和攻击事件");
+        {
+            Debug.Log("EffectManager 已订阅 MMEventManager 特效事件、攻击事件和死亡事件");
+            Debug.Log($"EffectManager 实例: {Instance?.name}, 当前对象: {gameObject.name}");
+        }
     }
     
     void Start()
@@ -78,9 +82,10 @@ public class EffectManager : MonoBehaviour, MMEventListener<EffectEvent>, MMEven
     
     void OnDisable()
     {
-        // 取消订阅MMEventManager的特效事件和攻击事件
+        // 取消订阅MMEventManager的特效事件、攻击事件和死亡事件
         this.MMEventStopListening<EffectEvent>();
         this.MMEventStopListening<AttackEvent>();
+        this.MMEventStopListening<DeathEvent>();
     }
     
     /// <summary>
@@ -227,6 +232,59 @@ public class EffectManager : MonoBehaviour, MMEventListener<EffectEvent>, MMEven
         
         Debug.LogWarning($"在 {targetObject.name} 及其父对象中未找到 EffectPlayer");
         return null;
+    }
+    
+    /// <summary>
+    /// 处理死亡事件（MMEventListener接口实现）
+    /// 负责播放死亡相关的特效，对象销毁由 MMF 的 Destroy 组件处理
+    /// </summary>
+    public void OnMMEvent(DeathEvent deathEvent)
+    {
+        if (enableDebugLog)
+        {
+            Debug.Log($"EffectManager 收到死亡事件: {deathEvent.DeathType}, 位置: {deathEvent.Position}, 对象: {deathEvent.DeadObject?.name}");
+        }
+        
+        // 播放死亡特效 - 使用死亡对象身上的 Dead Effect
+        if (deathEvent.DeadObject != null)
+        {
+            // 查找死亡对象下的 Effect Player (有 EffectPlayer 组件)
+            Transform effectPlayerTransform = deathEvent.DeadObject.transform.Find("Effect Player");
+            if (effectPlayerTransform != null)
+            {
+                EffectPlayer effectPlayer = effectPlayerTransform.GetComponent<EffectPlayer>();
+                if (effectPlayer != null)
+                {
+                    // 查找 Dead Effect 子对象 (有 MMF Player 组件)
+                    Transform deadEffectTransform = effectPlayerTransform.Find("Dead Effect");
+                    if (deadEffectTransform != null)
+                    {
+                        if (enableDebugLog)
+                        {
+                            Debug.Log($"EffectManager: 播放敌人 {deathEvent.DeadObject.name} 身上的死亡特效");
+                        }
+                        // 调用 Effect Player 的 PlayEffect 方法
+                        effectPlayer.PlayEffect("Dead Effect", deathEvent.Position, deathEvent.Direction);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"EffectManager: 在 {deathEvent.DeadObject.name}/Effect Player 下未找到 Dead Effect 子对象");
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning($"EffectManager: 在 {deathEvent.DeadObject.name}/Effect Player 上未找到 EffectPlayer 组件");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"EffectManager: 在 {deathEvent.DeadObject.name} 下未找到 Effect Player 子对象");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("EffectManager: 死亡事件中没有死亡对象");
+        }
     }
     
 }
