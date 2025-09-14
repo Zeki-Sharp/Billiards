@@ -99,10 +99,10 @@ public class EffectPlayer : MonoBehaviour
             // 设置特效位置
             mmfPlayer.transform.position = position;
             
-            // 如果是 Hit Attack Effect，动态设置 Position 反馈的目标位置
+            // 如果是 Hit Attack Effect，设置全局特效位置
             if (effectType == "Hit Attack Effect")
             {
-                SetPositionFeedbackTarget(mmfPlayer, position);
+                SetGlobalEffectPosition(position);
             }
             
             // 设置特效方向（如果有方向信息）
@@ -219,34 +219,15 @@ public class EffectPlayer : MonoBehaviour
     }
     
     /// <summary>
-    /// 设置 Position 反馈的目标位置
+    /// 设置全局特效位置
     /// </summary>
-    private void SetPositionFeedbackTarget(MMFeedbacks mmfPlayer, Vector3 targetPosition)
+    private void SetGlobalEffectPosition(Vector3 position)
     {
-        // 将 MMFeedbacks 转换为 MMF_Player 来访问 GetFeedbackOfType 方法
-        if (mmfPlayer is MMF_Player mmfPlayerComponent)
+        var globalEffect = GameObject.Find("PlayerHitAttackEffect");
+        if (globalEffect != null)
         {
-            // 查找 MMF_Position 反馈
-            var positionFeedback = mmfPlayerComponent.GetFeedbackOfType<MMF_Position>();
-            if (positionFeedback != null)
-            {
-                // 设置目标位置
-                positionFeedback.DestinationPosition = targetPosition;
-                positionFeedback.InitialPosition = targetPosition; // 立即出现在目标位置
-                
-                if (enableDebugLog)
-                    Debug.Log($"设置 Position 反馈目标位置: {targetPosition}");
-            }
-            else
-            {
-                if (enableDebugLog)
-                    Debug.LogWarning($"未找到 MMF_Position 反馈，无法设置目标位置");
-            }
-        }
-        else
-        {
-            if (enableDebugLog)
-                Debug.LogWarning($"MMF Player 不是 MMF_Player 类型，无法设置目标位置");
+            globalEffect.transform.position = position;
+            Debug.Log($"设置全局特效位置: {position}");
         }
     }
     
