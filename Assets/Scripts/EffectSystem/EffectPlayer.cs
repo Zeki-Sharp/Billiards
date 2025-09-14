@@ -99,10 +99,10 @@ public class EffectPlayer : MonoBehaviour
             // 设置特效位置
             mmfPlayer.transform.position = position;
             
-            // 如果是 Hit Attack Effect，设置全局特效位置
+            // 如果是 Hit Attack Effect，设置全局特效位置和方向
             if (effectType == "Hit Attack Effect")
             {
-                SetGlobalEffectPosition(position);
+                SetGlobalEffectPosition(position, direction);
             }
             
             // 设置特效方向（如果有方向信息）
@@ -219,15 +219,107 @@ public class EffectPlayer : MonoBehaviour
     }
     
     /// <summary>
-    /// 设置全局特效位置
+    /// 设置全局特效位置和方向
     /// </summary>
-    private void SetGlobalEffectPosition(Vector3 position)
+    private void SetGlobalEffectPosition(Vector3 position, Vector3 direction)
     {
         var globalEffect = GameObject.Find("PlayerHitAttackEffect");
         if (globalEffect != null)
         {
+            // 设置全局对象位置
             globalEffect.transform.position = position;
+            
+            // 设置 MMF 位置参数
+            SetMMFPositionParameters(globalEffect, position);
+            
+            // 设置粒子系统方向
+            SetParticleDirection(globalEffect, direction);
+            
             Debug.Log($"设置全局特效位置: {position}");
+        }
+        else
+        {
+            Debug.LogWarning("未找到全局特效对象");
+        }
+    }
+    
+    /// <summary>
+    /// 设置 MMF 位置参数
+    /// </summary>
+    private void SetMMFPositionParameters(GameObject globalEffect, Vector3 position)
+    {
+        // 找到 EffectPlayer 子对象
+        var effectPlayer = globalEffect.transform.Find("EffectPlayer");
+        if (effectPlayer != null)
+        {
+            // 找到 Hit Attack Effect 子对象
+            var hitAttackEffect = effectPlayer.Find("Hit Attack Effect");
+            if (hitAttackEffect != null)
+            {
+                var mmfPlayer = hitAttackEffect.GetComponent<MMFeedbacks>();
+                if (mmfPlayer is MMF_Player mmfPlayerComponent)
+                {
+                    // 查找所有 MMF_Position 反馈
+                    var positionFeedbacks = mmfPlayerComponent.GetFeedbacksOfType<MMF_Position>();
+                    if (positionFeedbacks != null && positionFeedbacks.Count > 0)
+                    {
+                        // 设置所有 Position 反馈的位置
+                        foreach (var positionFeedback in positionFeedbacks)
+                        {
+                            positionFeedback.DestinationPosition = position;
+                            positionFeedback.InitialPosition = position; // 立即出现在目标位置
+                        }
+                        
+                        Debug.Log($"设置了 {positionFeedbacks.Count} 个 MMF_Position 反馈的位置: {position}");
+                    }
+                    else
+                    {
+                        Debug.LogWarning("未找到 MMF_Position 反馈");
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning("Hit Attack Effect 没有 MMF_Player 组件");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("EffectPlayer 下未找到 Hit Attack Effect");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("PlayerHitAttackEffect 下未找到 EffectPlayer");
+        }
+    }
+    
+    /// <summary>
+    /// 设置粒子系统方向
+    /// </summary>
+    private void SetParticleDirection(GameObject globalEffect, Vector3 direction)
+    {
+        if (direction == Vector3.zero) return;
+        
+        // 查找粒子系统
+        var particleSystem = globalEffect.GetComponentInChildren<ParticleSystem>();
+        if (particleSystem != null)
+        {
+            // 启用 Velocity over Lifetime 模块
+            var velocityOverLifetime = particleSystem.velocityOverLifetime;
+            velocityOverLifetime.enabled = true;
+            velocityOverLifetime.space = ParticleSystemSimulationSpace.World;
+            
+            // 设置方向力（可以根据需要调整强度）
+            float forceStrength = 5f; // 可以调整这个值来控制方向力强度
+            velocityOverLifetime.x = direction.x * forceStrength;
+            velocityOverLifetime.y = direction.y * forceStrength;
+            velocityOverLifetime.z = direction.z * forceStrength;
+            
+            Debug.Log($"设置粒子方向: {direction} * {forceStrength}");
+        }
+        else
+        {
+            Debug.LogWarning("未找到粒子系统组件");
         }
     }
     
