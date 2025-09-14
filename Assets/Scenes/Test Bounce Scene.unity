@@ -952,8 +952,8 @@ ParticleSystem:
     startLifetime:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 0.16
-      minScalar: 0.08
+      scalar: 0.2
+      minScalar: 0.1
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -1587,7 +1587,7 @@ ParticleSystem:
     sphericalDirectionAmount: 0
     randomPositionAmount: 0
     radius:
-      value: 0.5
+      value: 0.4
       mode: 0
       spread: 0
       speed:
@@ -8216,7 +8216,7 @@ MonoBehaviour:
   aimLineLength: 5
   maxForce: 35
   minForce: 1
-  chargeSpeed: 20
+  chargeSpeed: 25
   useCyclingCharge: 0
   chargeBarUI: {fileID: 1824684429682011656}
   whiteBall: {fileID: 6734338411020087285}
