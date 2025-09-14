@@ -11,6 +11,12 @@ public class DamageTextConfig : ScriptableObject
     [Tooltip("伤害数字颜色")]
     public Color damageColor = Color.white;
     
+    [Header("文本设置")]
+    [Tooltip("伤害数字前缀（如：-、+、暴击等）")]
+    public string damagePrefix = "-";
+    [Tooltip("伤害数字后缀（如：伤害、治疗等）")]
+    public string damageSuffix = "";
+    
     
     [Header("对象池设置")]
     [Tooltip("对象池大小")]

@@ -89,7 +89,10 @@ public class DamageText : MonoBehaviour
     {
         if (textComponent == null) return;
         
-        textComponent.text = damageValue.ToString("F0");
+        // 构建完整的文本内容：前缀 + 伤害值 + 后缀
+        string prefix = config != null ? config.damagePrefix : "-";
+        string suffix = config != null ? config.damageSuffix : "";
+        textComponent.text = prefix + damageValue.ToString("F0") + suffix;
     }
     
     /// <summary>
