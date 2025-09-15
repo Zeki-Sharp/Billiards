@@ -25,9 +25,6 @@ public class ChargeSystem : MonoBehaviour
     [SerializeField] private bool useCyclingCharge = true; // 是否使用循环蓄力
     [SerializeField] private float cycleSpeed = 3f; // 循环速度
     
-    [Header("能量设置")]
-    [SerializeField] private float energyConsumptionRate = 20f; // 每秒消耗能量
-    
     [Header("调试")]
     [SerializeField] private bool showDebugInfo = true;
     
@@ -137,7 +134,7 @@ public class ChargeSystem : MonoBehaviour
         // 持续消耗能量
         if (energySystem != null)
         {
-            if (!energySystem.ConsumeEnergyOverTime(energyConsumptionRate))
+            if (!energySystem.ConsumeEnergyOverTime())
             {
                 // 能量耗尽，停止蓄力并通知
                 StopCharging();
@@ -294,7 +291,6 @@ public class ChargeSystem : MonoBehaviour
     public float MinForce => minForce;
     public bool UseCyclingCharge => useCyclingCharge;
     public float CycleSpeed => cycleSpeed;
-    public float EnergyConsumptionRate => energyConsumptionRate;
     
     #endregion
     

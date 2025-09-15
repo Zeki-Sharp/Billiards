@@ -83,9 +83,9 @@ public class EnergySystem : MonoBehaviour
     /// <summary>
     /// 持续消耗能量（蓄力时使用）
     /// </summary>
-    public bool ConsumeEnergyOverTime(float rate)
+    public bool ConsumeEnergyOverTime()
     {
-        currentEnergy -= rate * Time.deltaTime;
+        currentEnergy -= energyConsumeRate * Time.deltaTime;
         currentEnergy = Mathf.Max(0, currentEnergy);
         OnEnergyChanged?.Invoke(currentEnergy);
         
@@ -109,6 +109,11 @@ public class EnergySystem : MonoBehaviour
     public float GetCurrentEnergy()
     {
         return currentEnergy;
+    }
+    
+    public float GetEnergyThreshold()
+    {
+        return energyThreshold;
     }
     
     /// <summary>
