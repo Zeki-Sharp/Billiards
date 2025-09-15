@@ -145,33 +145,8 @@ public struct DeathEvent
     }
 }
 
-public struct GameStateEvent
-{
-    public string StateName;         // 状态名称：PhaseChanged, HealthChanged等
-    public int IntValue;            // 整数值
-    public float FloatValue;        // 浮点值
-    public string StringValue;      // 字符串值
-    public Vector3 Vector3Value;    // 向量值
-    public bool BoolValue;          // 布尔值
-    
-    /// <summary>
-    /// 触发游戏状态事件
-    /// </summary>
-    public static void Trigger(string stateName, int intValue = 0, float floatValue = 0f, string stringValue = "", Vector3 vector3Value = default, bool boolValue = false)
-    {
-        var gameStateEvent = new GameStateEvent
-        {
-            StateName = stateName,
-            IntValue = intValue,
-            FloatValue = floatValue,
-            StringValue = stringValue,
-            Vector3Value = vector3Value,
-            BoolValue = boolValue
-        };
-        
-        MoreMountains.Tools.MMEventManager.TriggerEvent(gameStateEvent);
-    }
-}
+// GameStateEvent 已移除，改用各系统的 C# Action 事件
+// 例如：energySystem.OnEnergyChanged, transitionManager.OnTransitionStart 等
 
 // 复杂的状态机通信事件已移除，改为直接引用通信
 

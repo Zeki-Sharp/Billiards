@@ -41,9 +41,6 @@ public class TransitionManager : MonoBehaviour
         transitionTimer = transitionDuration;
         OnTransitionStart?.Invoke();
         
-        // 触发MM事件
-        GameStateEvent.Trigger("TransitionStart", 0, transitionDuration, "过渡开始");
-        
         if (showDebugInfo)
         {
             Debug.Log($"TransitionManager: 开始过渡，持续时间: {transitionDuration}秒");
@@ -57,9 +54,6 @@ public class TransitionManager : MonoBehaviour
         isTransitioning = false;
         transitionTimer = 0f;
         OnTransitionEnd?.Invoke();
-        
-        // 触发MM事件
-        GameStateEvent.Trigger("TransitionEnd", 0, 1f, "过渡结束");
         
         if (showDebugInfo)
         {

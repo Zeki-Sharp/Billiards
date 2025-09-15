@@ -24,9 +24,6 @@ public class TimeStopManager : MonoBehaviour
         Time.timeScale = timeStopScale;
         OnTimeStopStart?.Invoke();
         
-        // 触发MM事件
-        GameStateEvent.Trigger("TimeStopStart", 0, timeStopScale, "完全时停");
-        
         if (showDebugInfo)
         {
             Debug.Log("TimeStopManager: 应用完全时停");
@@ -38,9 +35,6 @@ public class TimeStopManager : MonoBehaviour
         Time.timeScale = partialTimeStopScale;
         OnPartialTimeStopStart?.Invoke();
         
-        // 触发MM事件
-        GameStateEvent.Trigger("PartialTimeStopStart", 0, partialTimeStopScale, "部分时停");
-        
         if (showDebugInfo)
         {
             Debug.Log("TimeStopManager: 应用部分时停");
@@ -51,9 +45,6 @@ public class TimeStopManager : MonoBehaviour
     {
         Time.timeScale = normalTimeScale;
         OnTimeStopEnd?.Invoke();
-        
-        // 触发MM事件
-        GameStateEvent.Trigger("TimeStopEnd", 0, normalTimeScale, "释放时停");
         
         if (showDebugInfo)
         {

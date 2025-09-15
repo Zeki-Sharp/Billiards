@@ -19,7 +19,7 @@ public class EnergySystem : MonoBehaviour
     [Header("调试")]
     [SerializeField] private bool showDebugInfo = true;
     
-    // 事件（使用MM架构）
+    // 事件（使用C# Action）
     public System.Action<float> OnEnergyChanged; // 能量变化
     public System.Action OnEnergyReady; // 能量就绪
     public System.Action OnEnergyDepleted; // 能量耗尽
@@ -42,14 +42,10 @@ public class EnergySystem : MonoBehaviour
         currentEnergy = Mathf.Min(maxEnergy, currentEnergy);
         OnEnergyChanged?.Invoke(currentEnergy);
         
-        // 触发MM事件
-        GameStateEvent.Trigger("EnergyChanged", 0, currentEnergy, $"{currentEnergy:F1}/{maxEnergy:F1}");
-        
         // 检查是否达到阈值
         if (currentEnergy >= energyThreshold)
         {
             OnEnergyReady?.Invoke();
-            GameStateEvent.Trigger("EnergyReady", 0, currentEnergy, $"{currentEnergy:F1}/{maxEnergy:F1}");
         }
     }
     
@@ -69,13 +65,9 @@ public class EnergySystem : MonoBehaviour
             currentEnergy = Mathf.Max(0, currentEnergy);
             OnEnergyChanged?.Invoke(currentEnergy);
             
-            // 触发MM事件
-            GameStateEvent.Trigger("EnergyChanged", 0, currentEnergy, $"{currentEnergy:F1}/{maxEnergy:F1}");
-            
             if (currentEnergy < energyThreshold)
             {
                 OnEnergyDepleted?.Invoke();
-                GameStateEvent.Trigger("EnergyDepleted", 0, currentEnergy, $"{currentEnergy:F1}/{maxEnergy:F1}");
             }
         }
     }
@@ -89,13 +81,9 @@ public class EnergySystem : MonoBehaviour
         currentEnergy = Mathf.Max(0, currentEnergy);
         OnEnergyChanged?.Invoke(currentEnergy);
         
-        // 触发MM事件
-        GameStateEvent.Trigger("EnergyChanged", 0, currentEnergy, $"{currentEnergy:F1}/{maxEnergy:F1}");
-        
         if (currentEnergy <= 0)
         {
             OnEnergyDepleted?.Invoke();
-            GameStateEvent.Trigger("EnergyDepleted", 0, currentEnergy, $"{currentEnergy:F1}/{maxEnergy:F1}");
             return false; // 能量耗尽
         }
         return true; // 还有能量

@@ -91,49 +91,5 @@ public static class EventTrigger
     
     #endregion
     
-    #region 游戏状态事件
-    
-    /// <summary>
-    /// 触发阶段转换事件
-    /// </summary>
-    public static void PhaseChanged(int phaseId, string phaseName)
-    {
-        GameStateEvent.Trigger("PhaseChanged", phaseId, 0f, phaseName);
-    }
-    
-    /// <summary>
-    /// 触发游戏开始事件
-    /// </summary>
-    public static void GameStart()
-    {
-        GameStateEvent.Trigger("GameStart");
-    }
-    
-    /// <summary>
-    /// 触发游戏结束事件
-    /// </summary>
-    public static void GameEnd(bool isVictory)
-    {
-        GameStateEvent.Trigger("GameEnd", 0, 0f, "", Vector3.zero, isVictory);
-    }
-    
-    /// <summary>
-    /// 触发分数变化事件
-    /// </summary>
-    public static void ScoreChanged(int newScore)
-    {
-        GameStateEvent.Trigger("ScoreChanged", newScore);
-    }
-    
-    /// <summary>
-    /// 触发生命值变化事件
-    /// </summary>
-    public static void HealthChanged(float currentHealth, float maxHealth)
-    {
-        GameStateEvent.Trigger("HealthChanged", 0, currentHealth, $"{currentHealth}/{maxHealth}");
-    }
-    
-    #endregion
-    
-    // 状态机通信事件已移除，改为直接引用通信
+
 }
