@@ -17,7 +17,7 @@ public class AimController : MonoBehaviour
     public ChargeBarUI chargeBarUI; // 蓄力条UI
     
     [Header("球体设置")]
-    public WhiteBall whiteBall; // 白球引用
+    public PlayerCore playerCore; // 玩家核心引用
     
     [Header("相机设置")]
     public Camera targetCamera; // 目标相机，如果为空则使用主相机
@@ -30,8 +30,8 @@ public class AimController : MonoBehaviour
     
     // 私有变量
     private Camera cam;
-    private bool isCharging = false;
-    private float currentForce = 0f;
+    private bool isVisible = false; // 是否显示瞄准线
+    private float currentForce = 0f; // 当前蓄力强度
     private Vector2 aimDirection;
     private LineRenderer aimLine;
     private List<Vector3> reflectionPath = new List<Vector3>();
@@ -51,8 +51,8 @@ public class AimController : MonoBehaviour
     
     void Update()
     {
-        HandleInput();
         UpdateAimLine();
+        UpdateAimDirection();
     }
     
     void InitializeController()
@@ -65,13 +65,13 @@ public class AimController : MonoBehaviour
             return;
         }
         
-        // 获取白球
-        if (whiteBall == null)
+        // 获取玩家核心
+        if (playerCore == null)
         {
-            whiteBall = FindAnyObjectByType<WhiteBall>();
-            if (whiteBall == null)
+            playerCore = FindAnyObjectByType<PlayerCore>();
+            if (playerCore == null)
             {
-                Debug.LogError("TestAimController: 找不到WhiteBall！请设置whiteBall引用");
+                Debug.LogError("AimController: 找不到PlayerCore！请设置playerCore引用");
                 return;
             }
         }
@@ -265,19 +265,12 @@ public class AimController : MonoBehaviour
         }
     }
     
-    void HandleInput()
+    /// <summary>
+    /// 更新瞄准方向（从白球指向鼠标）
+    /// </summary>
+    void UpdateAimDirection()
     {
-        // 检查必要组件
-        if (whiteBall == null || cam == null)
-        {
-            return;
-        }
-        
-        // 检查白球是否在移动
-        if (whiteBall.IsMoving())
-        {
-            return;
-        }
+        if (playerCore == null || cam == null) return;
         
         // 获取鼠标屏幕坐标
         Vector3 mouseScreenPos = Input.mousePosition;
@@ -286,24 +279,10 @@ public class AimController : MonoBehaviour
         Vector3 mouseWorldPos = GetMouseWorldPosition(mouseScreenPos);
         
         // 计算瞄准方向 - 从白球指向鼠标的方向
-        Vector3 direction = mouseWorldPos - whiteBall.transform.position;
+        Vector3 direction = mouseWorldPos - playerCore.transform.position;
         if (direction.magnitude > 0.1f) // 避免零向量
         {
             aimDirection = direction.normalized;
-        }
-        
-        // 处理蓄力和发射
-        if (Input.GetMouseButtonDown(0))
-        {
-            StartCharging();
-        }
-        else if (Input.GetMouseButton(0) && isCharging)
-        {
-            ContinueCharging();
-        }
-        else if (Input.GetMouseButtonUp(0) && isCharging)
-        {
-            LaunchBall();
         }
     }
     
@@ -321,9 +300,12 @@ public class AimController : MonoBehaviour
         return new Vector3(worldX, worldY, 0f);
     }
     
-    void StartCharging()
+    /// <summary>
+    /// 显示蓄力UI（由外部调用）
+    /// </summary>
+    public void ShowChargingUI()
     {
-        isCharging = true;
+        isVisible = true;
         currentForce = useCyclingCharge ? minForce : 0f;
         
         // 显示蓄力条
@@ -333,27 +315,34 @@ public class AimController : MonoBehaviour
         }
         
         // 触发蓄力开始特效
-        EventTrigger.ChargeStart(whiteBall.transform.position, whiteBall.gameObject);
+        EventTrigger.ChargeStart(playerCore.transform.position, playerCore.gameObject);
+        
+        Debug.Log("AimController: 显示蓄力UI");
     }
     
-    void ContinueCharging()
+    /// <summary>
+    /// 更新蓄力UI显示（由外部调用）
+    /// </summary>
+    /// <param name="chargingProgress">蓄力进度 (0-1)</param>
+    public void UpdateChargingUI(float chargingProgress)
     {
+        if (!isVisible) return;
+        
+        // 根据蓄力进度计算力度
         if (useCyclingCharge)
         {
-            // 循环蓄力：线性上升下降循环
+            // 循环蓄力：基于进度计算当前力度
             float range = maxForce - minForce;
-            float cycleTime = 2f / chargeSpeed; // 一个完整循环的时间（上升+下降）
+            float cycleTime = 2f / chargeSpeed;
             float time = Time.time % cycleTime;
             
             float cycleValue;
             if (time < cycleTime * 0.5f)
             {
-                // 上升阶段：从0到1
                 cycleValue = time / (cycleTime * 0.5f);
             }
             else
             {
-                // 下降阶段：从1到0
                 cycleValue = 2f - (time / (cycleTime * 0.5f));
             }
             
@@ -361,9 +350,8 @@ public class AimController : MonoBehaviour
         }
         else
         {
-            // 传统蓄力：从0增长到最大值
-            currentForce += chargeSpeed * Time.deltaTime;
-            currentForce = Mathf.Clamp(currentForce, 0f, maxForce);
+            // 传统蓄力：直接使用进度
+            currentForce = Mathf.Lerp(minForce, maxForce, chargingProgress);
         }
         
         // 更新蓄力条UI
@@ -376,22 +364,15 @@ public class AimController : MonoBehaviour
         }
         
         // 触发力度变化事件
-        OnForceChanged?.Invoke(useCyclingCharge ? 
-            (currentForce - minForce) / (maxForce - minForce) : 
-            currentForce / maxForce);
+        OnForceChanged?.Invoke(chargingProgress);
     }
     
-    void LaunchBall()
+    /// <summary>
+    /// 隐藏蓄力UI（由外部调用）
+    /// </summary>
+    public void HideChargingUI()
     {
-        if (whiteBall != null)
-        {
-            Debug.Log($"发射白球: 方向={aimDirection}, 力度={currentForce}");
-            whiteBall.Launch(aimDirection, currentForce);
-            OnLaunch?.Invoke(aimDirection, currentForce);
-        }
-        
-        // 重置状态
-        isCharging = false;
+        isVisible = false;
         currentForce = 0f;
         
         // 隐藏蓄力条
@@ -403,27 +384,28 @@ public class AimController : MonoBehaviour
         // 触发事件
         OnForceChanged?.Invoke(0f);
         
+        Debug.Log("AimController: 隐藏蓄力UI");
     }
     
     void UpdateAimLine()
     {
         // 检查白球是否在移动
-        if (whiteBall == null || whiteBall.IsMoving())
+        if (playerCore == null || playerCore.IsPhysicsMoving())
         {
             aimLine.positionCount = 0;
             ClearSegmentLines(); // 清除分段线段
             return;
         }
         
-        // 只有在蓄力时才显示瞄准线
-        if (!isCharging)
+        // 只有在显示状态时才显示瞄准线
+        if (!isVisible)
         {
             aimLine.positionCount = 0;
             ClearSegmentLines(); // 清除分段线段
             return;
         }
         
-        Vector3 startPos = whiteBall.transform.position;
+        Vector3 startPos = playerCore.transform.position;
         
         // 使用反射计算器计算路径
         if (reflectionCalculator != null)
@@ -433,9 +415,9 @@ public class AimController : MonoBehaviour
             {
                 // 获取白球半径
                 float ballRadius = 0.5f; // 默认半径
-                if (whiteBall != null)
+                if (playerCore != null)
                 {
-                    CircleCollider2D ballCollider = whiteBall.GetComponent<CircleCollider2D>();
+                    CircleCollider2D ballCollider = playerCore.GetComponent<CircleCollider2D>();
                     if (ballCollider != null)
                     {
                         ballRadius = ballCollider.radius;
@@ -573,9 +555,12 @@ public class AimController : MonoBehaviour
         return currentForce;
     }
     
-    public bool IsCharging()
+    /// <summary>
+    /// 是否正在显示蓄力UI
+    /// </summary>
+    public bool IsVisible()
     {
-        return isCharging;
+        return isVisible;
     }
     
     public Vector2 GetAimDirection()
@@ -584,10 +569,10 @@ public class AimController : MonoBehaviour
     }
     
     // 手动设置白球引用（用于运行时动态设置）
-    public void SetWhiteBall(WhiteBall ball)
+    public void SetPlayerCore(PlayerCore core)
     {
-        whiteBall = ball;
-        Debug.Log($"TestAimController: 设置白球引用为 {ball.name}");
+        playerCore = core;
+        Debug.Log($"AimController: 设置玩家核心引用为 {core.name}");
     }
     
     // 手动设置相机引用
@@ -600,7 +585,7 @@ public class AimController : MonoBehaviour
     // 重置控制器状态
     public void ResetController()
     {
-        isCharging = false;
+        isVisible = false;
         currentForce = 0f;
         aimDirection = Vector2.zero;
         
@@ -627,7 +612,7 @@ public class AimController : MonoBehaviour
             }
         }
         
-        Debug.Log("TestAimController 状态已重置");
+        Debug.Log("AimController 状态已重置");
     }
     
     // 反射相关方法

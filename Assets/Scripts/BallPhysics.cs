@@ -322,7 +322,7 @@ public class BallPhysics : MonoBehaviour
     
     public bool IsMoving()
     {
-        return rb != null && rb.linearVelocity.magnitude > 0.1f;
+        return rb != null && rb.linearVelocity.magnitude > ballData.stopThreshold;
     }
     
     public void ResetBall()

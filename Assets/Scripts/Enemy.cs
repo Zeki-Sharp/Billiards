@@ -10,7 +10,7 @@ public class Enemy : MonoBehaviour, MMEventListener<AttackEvent>
     
     
     private float currentHealth;
-    private WhiteBall targetBall;
+    private Player targetPlayer;
     
     // 防重复触发机制
     private float lastAttackTime = 0f;
@@ -25,7 +25,7 @@ public class Enemy : MonoBehaviour, MMEventListener<AttackEvent>
     void Start()
     {
         currentHealth = combatData != null ? combatData.currentHealth : 100f;
-        targetBall = FindAnyObjectByType<WhiteBall>();
+        targetPlayer = FindAnyObjectByType<Player>();
         
         // 获取或添加 BallPhysics 组件
         ballPhysics = GetComponent<BallPhysics>();
@@ -64,10 +64,10 @@ public class Enemy : MonoBehaviour, MMEventListener<AttackEvent>
     public void InitializeAttackRange()
     {
         AttackRange attackRange = GetComponentInChildren<AttackRange>();
-        if (attackRange != null && targetBall != null)
+        if (attackRange != null && targetPlayer != null)
         {
             // 计算从敌人到白球的方向
-            Vector2 direction = (targetBall.transform.position - transform.position).normalized;
+            Vector2 direction = (targetPlayer.transform.position - transform.position).normalized;
             
             // 简化初始化：直接调用AttackRange的SetAttackDirection方法
             attackRange.SetAttackDirection(direction);
@@ -88,11 +88,11 @@ public class Enemy : MonoBehaviour, MMEventListener<AttackEvent>
                 return;
             }
             
-            // 检查当前游戏阶段，只有在非敌人阶段时才受伤
-            GameManager gameManager = GameManager.Instance;
-            if (gameManager != null && gameManager.GetCurrentPhase() == GameManager.GamePhase.EnemyPhase)
+            // 检查当前游戏状态，只有在非敌人阶段时才受伤
+            GameFlowController gameFlowController = GameFlowController.Instance;
+            if (gameFlowController != null && gameFlowController.IsNormalState)
             {
-                Debug.Log($"Enemy {name} 在敌人阶段，不受伤");
+                Debug.Log($"Enemy {name} 在正常状态，不受伤");
                 return;
             }
             
@@ -101,34 +101,38 @@ public class Enemy : MonoBehaviour, MMEventListener<AttackEvent>
             
             // 计算伤害和碰撞信息
             // 白球攻击敌人，应该使用白球的伤害值
-            WhiteBall whiteBall = collision.gameObject.GetComponent<WhiteBall>();
-            float damage = whiteBall != null && whiteBall.combatData != null ? whiteBall.combatData.damage : 50f;
+            Player player = collision.gameObject.GetComponent<Player>();
+            float damage = player != null && player.combatData != null ? player.combatData.damage : 50f;
             Vector3 hitPosition = (transform.position + collision.transform.position) * 0.5f;
             Vector3 hitDirection = (transform.position - collision.transform.position).normalized;
             
-            Debug.Log($"Enemy {name} 被白球攻击，白球伤害: {damage}, 碰撞体: {collision.collider.name}");
+            Debug.Log($"Enemy {name} 被玩家攻击，玩家伤害: {damage}, 碰撞体: {collision.collider.name}");
             
             // 触发攻击事件，伤害处理由事件监听器处理
             EventTrigger.Attack("Hit", hitPosition, hitDirection, collision.gameObject, gameObject, damage);
             
-            // 获取白球的 BallPhysics 组件
-            BallPhysics whiteBallPhysics = collision.gameObject.GetComponent<BallPhysics>();
-            if (whiteBallPhysics != null)
+            // 获取玩家的 BallPhysics 组件
+            PlayerCore playerCore = player.GetPlayerCore();
+            if (playerCore != null)
             {
-                // 检查是否还能获得充能力（基于速度）
-                if (CanGetBoost())
+                BallPhysics playerPhysics = playerCore.GetComponent<BallPhysics>();
+                if (playerPhysics != null)
                 {
-                    // 计算碰撞方向
-                    Vector2 collisionDirection = (transform.position - collision.transform.position).normalized;
-                    
-                    // 给双方都添加充能力
-                    Vector2 boostForce = collisionDirection * ballData.hitBoostForce * ballData.hitBoostMultiplier;
-                    
-                    // 给敌人添加充能力
-                    ballPhysics.ApplyForce(boostForce);
-                    
-                    // 给白球添加充能力
-                    whiteBallPhysics.ApplyForce(-boostForce);
+                    // 检查是否还能获得充能力（基于速度）
+                    if (CanGetBoost())
+                    {
+                        // 计算碰撞方向
+                        Vector2 collisionDirection = (transform.position - collision.transform.position).normalized;
+                        
+                        // 给双方都添加充能力
+                        Vector2 boostForce = collisionDirection * ballData.hitBoostForce * ballData.hitBoostMultiplier;
+                        
+                        // 给敌人添加充能力
+                        ballPhysics.ApplyForce(boostForce);
+                        
+                        // 给玩家添加充能力
+                        playerPhysics.ApplyForce(-boostForce);
+                    }
                 }
             }
             

@@ -3,7 +3,7 @@ using UnityEngine;
 public class Hole : MonoBehaviour
 {
     // 事件：白球进洞
-    public System.Action<WhiteBall> OnWhiteBallInHole;
+    public System.Action<Player> OnPlayerInHole;
     
     void OnTriggerEnter2D(Collider2D other)
     {
@@ -27,17 +27,17 @@ public class Hole : MonoBehaviour
         // 检测白球进入hole
         if (other.CompareTag("Player"))
         {
-            WhiteBall whiteBall = other.GetComponent<WhiteBall>();
-            if (whiteBall != null)
+            Player player = other.GetComponent<Player>();
+            if (player != null)
             {
-                Debug.Log("白球进入hole，触发事件");
+                Debug.Log("玩家进入hole，触发事件");
                 
-                // 触发白球进洞特效事件
+                // 触发玩家进洞特效事件
                 EventTrigger.HoleEnter(other.transform.position, other.gameObject);
                 
-                Debug.Log($"OnWhiteBallInHole事件订阅者数量: {OnWhiteBallInHole?.GetInvocationList()?.Length ?? 0}");
+                Debug.Log($"OnPlayerInHole事件订阅者数量: {OnPlayerInHole?.GetInvocationList()?.Length ?? 0}");
                 // 触发事件，让GameManager处理
-                OnWhiteBallInHole?.Invoke(whiteBall);
+                OnPlayerInHole?.Invoke(player);
                 Debug.Log("事件已触发");
             }
         }

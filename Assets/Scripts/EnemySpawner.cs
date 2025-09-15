@@ -24,7 +24,7 @@ public class EnemySpawner : MonoBehaviour
     public KeyCode spawnKey = KeyCode.Space; // 按空格生成敌人
     
     private List<Enemy> spawnedEnemies = new List<Enemy>(); // 已生成的敌人列表
-    private WhiteBall targetBall;
+    private Player targetPlayer;
     private EnemyController enemyController;
     
     // 生成点状态
@@ -34,7 +34,7 @@ public class EnemySpawner : MonoBehaviour
     
     void Start()
     {
-        targetBall = FindAnyObjectByType<WhiteBall>();
+        targetPlayer = FindAnyObjectByType<Player>();
         enemyController = FindAnyObjectByType<EnemyController>();
         
         if (enemyPrefab == null)

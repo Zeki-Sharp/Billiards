@@ -11,7 +11,7 @@ public class AttackRange : MonoBehaviour
     public Color attackColor = new Color(1f, 0f, 0f, 0.8f);  // 攻击颜色
     
     private SpriteRenderer spriteRenderer;
-    private WhiteBall targetBall;
+    private Player targetPlayer;
     private Vector2 attackDirection; // 攻击方向（在预览阶段确定）
     private bool isPreviewActive = false; // 是否正在预览状态
     
@@ -38,8 +38,8 @@ public class AttackRange : MonoBehaviour
         }
         collider.isTrigger = true; // 设为触发器，不参与物理碰撞
         
-        // 查找白球
-        targetBall = FindAnyObjectByType<WhiteBall>();
+        // 查找玩家
+        targetPlayer = FindAnyObjectByType<Player>();
         
         // 设置初始状态
         SetVisible(false);
@@ -86,12 +86,12 @@ public class AttackRange : MonoBehaviour
         }
         
         // 只在第一次进入预览状态时更新攻击方向
-        if (!isPreviewActive && targetBall != null)
+        if (!isPreviewActive && targetPlayer != null)
         {
-            Vector2 currentDirection = (targetBall.transform.position - transform.parent.position).normalized;
+            Vector2 currentDirection = (targetPlayer.transform.position - transform.parent.position).normalized;
             attackDirection = currentDirection; // 保存新的攻击方向
             SetAttackDirection(currentDirection);
-            Debug.Log($"AttackRange {name} 更新攻击方向: {currentDirection}, 白球位置: {targetBall.transform.position}, 敌人位置: {transform.parent.position}");
+            Debug.Log($"AttackRange {name} 更新攻击方向: {currentDirection}, 玩家位置: {targetPlayer.transform.position}, 敌人位置: {transform.parent.position}");
         }
         
         isPreviewActive = true;
@@ -144,20 +144,20 @@ public class AttackRange : MonoBehaviour
     
     public bool IsPlayerInRange()
     {
-        if (targetBall == null) return false;
+        if (targetPlayer == null) return false;
         
-        // 从白球位置垂直发射射线，检测与攻击范围的重叠
-        Vector2 whiteBallPos = targetBall.transform.position;
+        // 从玩家位置垂直发射射线，检测与攻击范围的重叠
+        Vector2 playerPos = targetPlayer.transform.position;
         
         // 获取攻击范围的边界
         Bounds attackBounds = GetAttackRangeBounds();
         
-        // 检查白球是否在攻击范围内
-        bool inRange = attackBounds.Contains(whiteBallPos);
+        // 检查玩家是否在攻击范围内
+        bool inRange = attackBounds.Contains(playerPos);
         
         if (inRange)
         {
-            Debug.Log($"白球在攻击范围内: 白球位置={whiteBallPos}, 攻击范围边界={attackBounds}");
+            Debug.Log($"玩家在攻击范围内: 玩家位置={playerPos}, 攻击范围边界={attackBounds}");
         }
         
         return inRange;

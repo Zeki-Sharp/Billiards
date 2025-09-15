@@ -23,7 +23,7 @@ public class EnemyController : MonoBehaviour
     private EnemyPhase currentPhase = EnemyPhase.AttackPhase;
     private float phaseTimer = 0f;
     private Enemy[] enemies;
-    private WhiteBall targetBall;
+    private Player targetPlayer;
     private HoleManager holeManager;
     private bool isActive = false;
     private bool hasCompleted = false; // 防止重复完成
@@ -40,7 +40,7 @@ public class EnemyController : MonoBehaviour
     {
         // 查找所有敌人和白球
         enemies = FindObjectsByType<Enemy>(FindObjectsSortMode.None);
-        targetBall = FindAnyObjectByType<WhiteBall>();
+        targetPlayer = FindAnyObjectByType<Player>();
         holeManager = FindAnyObjectByType<HoleManager>();
         
         Debug.Log($"EnemyController初始化: 找到{enemies.Length}个敌人");
@@ -203,7 +203,7 @@ public class EnemyController : MonoBehaviour
             if (enemy == null || !enemy.IsAlive()) continue;
             
             // 计算朝向白球的方向
-            Vector2 direction = (targetBall.transform.position - enemy.transform.position).normalized;
+            Vector2 direction = (targetPlayer.transform.position - enemy.transform.position).normalized;
             
             // 计算目标位置（当前位置 + 方向 * 移动距离）
             Vector2 targetPosition = (Vector2)enemy.transform.position + direction * moveDistance;
@@ -290,16 +290,16 @@ public class EnemyController : MonoBehaviour
     
     void CheckDamage()
     {
-        if (targetBall == null) return;
+        if (targetPlayer == null) return;
         
-        Vector2 whiteBallPos = targetBall.transform.position;
+        Vector2 playerPos = targetPlayer.transform.position;
         int totalDamage = 0;
         int hitCount = 0;
         
-        // 从白球位置垂直发射射线，检测所有攻击范围
-        RaycastHit2D[] hits = Physics2D.RaycastAll(whiteBallPos, Vector2.up, 0.1f);
+        // 从玩家位置垂直发射射线，检测所有攻击范围
+        RaycastHit2D[] hits = Physics2D.RaycastAll(playerPos, Vector2.up, 0.1f);
         
-        Debug.Log($"从白球位置 {whiteBallPos} 发射射线，检测到 {hits.Length} 个碰撞体");
+        Debug.Log($"从玩家位置 {playerPos} 发射射线，检测到 {hits.Length} 个碰撞体");
         
         // 检查每个碰撞体是否是敌人的攻击范围
         foreach (RaycastHit2D hit in hits)
@@ -324,18 +324,22 @@ public class EnemyController : MonoBehaviour
         
         if (hitCount > 0)
         {
-            Debug.Log($"白球受到 {hitCount} 个敌人攻击，总伤害: {totalDamage}");
+            Debug.Log($"玩家受到 {hitCount} 个敌人攻击，总伤害: {totalDamage}");
             
             // 注意：攻击事件已由物理碰撞系统处理，这里不再重复触发
             // 直接处理伤害，避免重复的攻击事件
-            if (targetBall != null)
+            if (targetPlayer != null)
             {
-                targetBall.TakeDamage(totalDamage);
+                PlayerCore playerCore = targetPlayer.GetPlayerCore();
+                if (playerCore != null)
+                {
+                    playerCore.TakeDamage(totalDamage);
+                }
             }
         }
         else
         {
-            Debug.Log("白球未受到任何攻击");
+            Debug.Log("玩家未受到任何攻击");
         }
     }
     

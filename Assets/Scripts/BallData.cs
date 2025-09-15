@@ -13,7 +13,7 @@ public class BallData : ScriptableObject
     public float stopThreshold = 0.5f; // 停止阈值，速度低于此值时自动停止
     
     [Header("运动属性")]
-    public float linearDamping = 0.5f; // 线性阻尼，让球逐渐减速
+    public float linearDamping = 0.1f; // 线性阻尼，让球逐渐减速
     
     [Header("特殊规则")]
     public bool isWhiteBall = false; // 是否为白球
@@ -51,6 +51,16 @@ public class BallData : ScriptableObject
     public float maxTimeDamping = 1.5f;
     [Tooltip("时间阻尼开始时间（秒）")]
     public float timeDampingStartTime = 2.0f;
+    
+    [Header("微调移动设置")]
+    [Tooltip("微调移动力度")]
+    public float microMoveForce = 10f;
+    [Tooltip("微调移动最大速度")]
+    public float microMoveMaxSpeed = 10f;
+    [Tooltip("微调移动阻尼")]
+    public float microMoveDamping = 0.8f;
+    [Tooltip("微调移动冷却时间")]
+    public float microMoveCooldown = 0.1f;
     
     [Header("性能优化")]
     public float updateThreshold = 0.1f; // 参数变化阈值，避免频繁更新

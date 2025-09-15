@@ -11,7 +11,7 @@ public class HoleManager : MonoBehaviour
     private List<Hole> holeScripts = new List<Hole>(); // 存储所有Hole脚本
     
     // 事件：白球进洞
-    public System.Action<WhiteBall> OnWhiteBallInHole;
+    public System.Action<Player> OnPlayerInHole;
     
     void Start()
     {
@@ -37,7 +37,7 @@ public class HoleManager : MonoBehaviour
             holeScripts.Add(holeScript);
             
             // 订阅这个Hole的事件
-            holeScript.OnWhiteBallInHole += HandleWhiteBallInHole;
+            holeScript.OnPlayerInHole += HandlePlayerInHole;
             
             Debug.Log($"找到Hole对象: {parentHole.name} (脚本在子物体: {holeScript.name})");
         }
@@ -45,11 +45,11 @@ public class HoleManager : MonoBehaviour
         Debug.Log($"总共找到 {allHoles.Count} 个有效的Hole对象");
     }
     
-    void HandleWhiteBallInHole(WhiteBall whiteBall)
+    void HandlePlayerInHole(Player player)
     {
-        Debug.Log("HoleManager接收到白球进洞事件");
+        Debug.Log("HoleManager接收到玩家进洞事件");
         // 转发事件给GameManager
-        OnWhiteBallInHole?.Invoke(whiteBall);
+        OnPlayerInHole?.Invoke(player);
     }
     
     public void ActivateRandomHoles()
