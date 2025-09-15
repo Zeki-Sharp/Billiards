@@ -23,7 +23,7 @@ using UnityEngine;
 public class PlayerMovementController : MonoBehaviour
 {
     [Header("移动设置")]
-    [SerializeField] private float microMoveMaxSpeed = 5f;
+    [SerializeField] private float microMoveMaxSpeed = 2f;
     [SerializeField] private bool showDebugInfo = true;
     
     // 组件引用

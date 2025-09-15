@@ -13,6 +13,8 @@ public class GameInitializer : MonoBehaviour
     // 需要初始化的组件
     private GameManager gameManager;
     private GameFlowController gameFlowController;
+    private PlayerStateMachine playerStateMachine;
+    private PlayerCore playerCore;
     private EnergySystem energySystem;
     private TimeStopManager timeStopManager;
     private TransitionManager transitionManager;
@@ -160,6 +162,8 @@ public class GameInitializer : MonoBehaviour
         if (gameFlowController != null)
         {
             gameFlowController.SetEnergySystem(energySystem);
+            gameFlowController.SetPlayerStateMachine(playerStateMachine);
+            gameFlowController.SetPlayerCore(playerCore);
             gameFlowController.SetTimeStopManager(timeStopManager);
             gameFlowController.SetTransitionManager(transitionManager);
             gameFlowController.SetEnemyManager(enemyManager);

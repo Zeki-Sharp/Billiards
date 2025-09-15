@@ -207,7 +207,7 @@ public class PlayerInputHandler : MonoBehaviour
             movementController.HandleMovement(moveInput, isMovePressed);
         }
         
-        // 检测蓄力输入，通过事件通信
+        // 检测蓄力输入，直接调用状态机
         if (isAttackPressed)
         {
             if (showDebugInfo)
@@ -215,8 +215,11 @@ public class PlayerInputHandler : MonoBehaviour
                 Debug.Log("PlayerInputHandler: 检测到蓄力输入，请求进入蓄力状态");
             }
             
-            // 通过事件请求进入蓄力状态
-            EventTrigger.RequestChargingState();
+            // 直接调用PlayerStateMachine开始蓄力
+            if (stateMachine != null)
+            {
+                stateMachine.StartCharging();
+            }
         }
     }
     

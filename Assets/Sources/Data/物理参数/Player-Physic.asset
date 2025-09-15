@@ -97,8 +97,8 @@ MonoBehaviour:
   timeDampingRate: 0.8
   maxTimeDamping: 2.4
   timeDampingStartTime: 1
-  microMoveForce: 3
-  microMoveMaxSpeed: 3
+  microMoveForce: 1
+  microMoveMaxSpeed: 1
   microMoveDamping: 0.8
   microMoveCooldown: 0.01
   updateThreshold: 0.05
