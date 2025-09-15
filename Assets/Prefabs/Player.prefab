@@ -7521,7 +7521,7 @@ GameObject:
   - component: {fileID: 1445195150008475076}
   - component: {fileID: 2368200097180006487}
   m_Layer: 0
-  m_Name: WhiteBall_Test
+  m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

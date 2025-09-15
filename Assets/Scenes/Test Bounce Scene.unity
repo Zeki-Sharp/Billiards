@@ -5885,46 +5885,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a160c899e680674ba3b38b3a00e9d11, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  energySlider: {fileID: 0}
-  fillImage: {fileID: 940378114}
-  energyText: {fileID: 0}
-  thresholdText: {fileID: 0}
-  normalColor:
-    r: 0
-    g: 1
-    b: 0
-    a: 1
-  lowEnergyColor:
-    r: 1
-    g: 0.92156863
-    b: 0.015686275
-    a: 1
-  criticalEnergyColor:
-    r: 1
-    g: 0
-    b: 0
-    a: 1
-  belowThresholdColor:
-    r: 0.5
-    g: 0.5
-    b: 0.5
-    a: 1
-  colorChangeSpeed: 2
-  enableSmoothTransition: 1
-  showThresholdIndicator: 1
-  showDebugInfo: 1
-  energySystem: {fileID: 0}
-  isInitialized: 0
-  targetColor:
-    r: 0
-    g: 0
-    b: 0
-    a: 0
-  currentColor:
-    r: 0
-    g: 0
-    b: 0
-    a: 0
 --- !u!1 &842057707
 GameObject:
   m_ObjectHideFlags: 0
@@ -8571,7 +8531,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   aimLineLength: 5
   chargeSystem: {fileID: 6734338411020087302}
-  chargeBarUI: {fileID: 0}
+  chargeBarUI: {fileID: 1394519833}
   playerCore: {fileID: 6734338411020087296}
   targetCamera: {fileID: 859979524}
   reflectionCalculator: {fileID: 1360613287}
@@ -8849,6 +8809,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enableDebugLog: 1
+--- !u!114 &1394519833 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7487340331778245147, guid: 2d86053af5e50c446a06f75cbdecb65b, type: 3}
+  m_PrefabInstance: {fileID: 5924173280866626688}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60a34d02fd7e8e24f86d80d7d49b8996, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1398340945
 GameObject:
   m_ObjectHideFlags: 0

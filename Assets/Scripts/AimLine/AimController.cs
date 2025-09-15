@@ -87,6 +87,8 @@ public class AimController : MonoBehaviour
             if (playerCore == null)
             {
                 Debug.LogWarning("AimController: 当前找不到PlayerCore，将在下一帧重试");
+                // 即使没有PlayerCore，也要设置瞄准线
+                SetupAimLine();
                 // 使用协程延迟查找
                 StartCoroutine(DelayedPlayerCoreSearch());
                 return;
@@ -111,7 +113,18 @@ public class AimController : MonoBehaviour
             if (chargeBarUI == null)
             {
                 Debug.LogWarning("AimController: 当前找不到ChargeBarUI，将在下一帧重试");
+                // 尝试查找所有ChargeBarUI组件进行调试
+                ChargeBarUI[] allChargeBars = FindObjectsByType<ChargeBarUI>(FindObjectsSortMode.None);
+                Debug.Log($"AimController: 场景中找到 {allChargeBars.Length} 个ChargeBarUI组件");
+                for (int i = 0; i < allChargeBars.Length; i++)
+                {
+                    Debug.Log($"ChargeBarUI[{i}]: {allChargeBars[i].name}, Active: {allChargeBars[i].gameObject.activeInHierarchy}");
+                }
                 return;
+            }
+            else
+            {
+                Debug.Log($"AimController: 找到ChargeBarUI: {chargeBarUI.name}");
             }
         }
         
@@ -156,6 +169,14 @@ public class AimController : MonoBehaviour
             if (chargeBarUI == null)
             {
                 chargeBarUI = FindAnyObjectByType<ChargeBarUI>();
+                if (chargeBarUI != null)
+                {
+                    Debug.Log($"AimController: 延迟查找找到ChargeBarUI: {chargeBarUI.name}");
+                }
+                else
+                {
+                    Debug.LogWarning("AimController: 延迟查找仍未找到ChargeBarUI");
+                }
             }
             
             // 设置瞄准线
@@ -177,6 +198,22 @@ public class AimController : MonoBehaviour
     
     void SetupAimLine()
     {
+        // 如果已经存在，先清理
+        if (aimLine != null)
+        {
+            if (aimLine.gameObject != null)
+            {
+                DestroyImmediate(aimLine.gameObject);
+            }
+            aimLine = null;
+        }
+        
+        if (lineContainer != null)
+        {
+            DestroyImmediate(lineContainer);
+            lineContainer = null;
+        }
+        
         // 创建瞄准线容器
         lineContainer = new GameObject("AimLineContainer");
         lineContainer.transform.SetParent(transform);
@@ -403,6 +440,17 @@ public class AimController : MonoBehaviour
         else
         {
             Debug.LogWarning("AimController: ChargeBarUI 为 null，无法显示蓄力条");
+            // 尝试重新查找
+            chargeBarUI = FindAnyObjectByType<ChargeBarUI>();
+            if (chargeBarUI != null)
+            {
+                chargeBarUI.SetVisible(true);
+                Debug.Log("AimController: 重新查找后找到ChargeBarUI并显示");
+            }
+            else
+            {
+                Debug.LogError("AimController: 重新查找后仍未找到ChargeBarUI");
+            }
         }
         
         // 订阅蓄力系统事件
@@ -483,6 +531,18 @@ public class AimController : MonoBehaviour
     
     void UpdateAimLine()
     {
+        // 确保aimLine已初始化
+        if (aimLine == null)
+        {
+            Debug.LogWarning("AimController: aimLine未初始化，尝试重新设置");
+            SetupAimLine();
+            if (aimLine == null)
+            {
+                Debug.LogError("AimController: 无法初始化aimLine，跳过更新");
+                return;
+            }
+        }
+        
         // 检查白球是否在移动
         if (playerCore == null || playerCore.IsPhysicsMoving())
         {
