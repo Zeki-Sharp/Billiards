@@ -7,11 +7,8 @@ public class AimController : MonoBehaviour
     [Header("瞄准设置")]
     public float aimLineLength = 3f; // 瞄准线固定长度（反射计算器失败时的后备方案）
     
-    [Header("力度设置")]
-    public float maxForce = 10f; // 最大力度值
-    public float minForce = 1f; // 最小力度值
-    public float chargeSpeed = 3f; // 蓄力速度
-    public bool useCyclingCharge = true; // 是否使用循环蓄力
+    [Header("蓄力系统")]
+    public ChargeSystem chargeSystem; // 蓄力系统引用
     
     [Header("UI设置")]
     public ChargeBarUI chargeBarUI; // 蓄力条UI
@@ -31,7 +28,6 @@ public class AimController : MonoBehaviour
     // 私有变量
     private Camera cam;
     private bool isVisible = false; // 是否显示瞄准线
-    private float currentForce = 0f; // 当前蓄力强度
     private Vector2 aimDirection;
     private LineRenderer aimLine;
     private List<Vector3> reflectionPath = new List<Vector3>();
@@ -41,7 +37,6 @@ public class AimController : MonoBehaviour
     private GameObject lineContainer; // 用于管理所有线段
     
     // 事件
-    public System.Action<float> OnForceChanged;
     public System.Action<Vector2, float> OnLaunch;
     
     void Start()
@@ -98,6 +93,17 @@ public class AimController : MonoBehaviour
             }
         }
         
+        // 获取蓄力系统 - 使用延迟查找
+        if (chargeSystem == null)
+        {
+            chargeSystem = FindAnyObjectByType<ChargeSystem>();
+            if (chargeSystem == null)
+            {
+                Debug.LogWarning("AimController: 当前找不到ChargeSystem，将在下一帧重试");
+                return;
+            }
+        }
+        
         // 设置瞄准线
         SetupAimLine();
         
@@ -128,6 +134,13 @@ public class AimController : MonoBehaviour
         if (playerCore != null)
         {
             Debug.Log("AimController: 延迟查找成功，找到PlayerCore");
+            
+            // 查找蓄力系统
+            if (chargeSystem == null)
+            {
+                chargeSystem = FindAnyObjectByType<ChargeSystem>();
+            }
+            
             // 设置瞄准线
             SetupAimLine();
             
@@ -363,7 +376,6 @@ public class AimController : MonoBehaviour
     public void ShowChargingUI()
     {
         isVisible = true;
-        currentForce = useCyclingCharge ? minForce : 0f;
         
         // 显示蓄力条
         if (chargeBarUI != null)
@@ -371,57 +383,47 @@ public class AimController : MonoBehaviour
             chargeBarUI.SetVisible(true);
         }
         
+        // 订阅蓄力系统事件
+        if (chargeSystem != null)
+        {
+            chargeSystem.OnChargingProgressChanged += UpdateChargingProgress;
+            chargeSystem.OnForceChanged += UpdateForceDisplay;
+        }
+        
         // 触发蓄力开始特效
-        EventTrigger.ChargeStart(playerCore.transform.position, playerCore.gameObject);
+        if (playerCore != null)
+        {
+            EventTrigger.ChargeStart(playerCore.transform.position, playerCore.gameObject);
+        }
         
         Debug.Log("AimController: 显示蓄力UI");
     }
     
     /// <summary>
-    /// 更新蓄力UI显示（由外部调用）
+    /// 更新蓄力进度显示（由ChargeSystem事件调用）
     /// </summary>
     /// <param name="chargingProgress">蓄力进度 (0-1)</param>
-    public void UpdateChargingUI(float chargingProgress)
+    void UpdateChargingProgress(float chargingProgress)
     {
         if (!isVisible) return;
-        
-        // 根据蓄力进度计算力度
-        if (useCyclingCharge)
-        {
-            // 循环蓄力：基于进度计算当前力度
-            float range = maxForce - minForce;
-            float cycleTime = 2f / chargeSpeed;
-            float time = Time.time % cycleTime;
-            
-            float cycleValue;
-            if (time < cycleTime * 0.5f)
-            {
-                cycleValue = time / (cycleTime * 0.5f);
-            }
-            else
-            {
-                cycleValue = 2f - (time / (cycleTime * 0.5f));
-            }
-            
-            currentForce = minForce + cycleValue * range;
-        }
-        else
-        {
-            // 传统蓄力：直接使用进度
-            currentForce = Mathf.Lerp(minForce, maxForce, chargingProgress);
-        }
         
         // 更新蓄力条UI
         if (chargeBarUI != null)
         {
-            float normalizedValue = useCyclingCharge ? 
-                (currentForce - minForce) / (maxForce - minForce) : 
-                currentForce / maxForce;
-            chargeBarUI.UpdateCharge(normalizedValue);
+            chargeBarUI.UpdateCharge(chargingProgress);
         }
+    }
+    
+    /// <summary>
+    /// 更新力度显示（由ChargeSystem事件调用）
+    /// </summary>
+    /// <param name="currentForce">当前力度</param>
+    void UpdateForceDisplay(float currentForce)
+    {
+        if (!isVisible) return;
         
-        // 触发力度变化事件
-        OnForceChanged?.Invoke(chargingProgress);
+        // 这里可以添加力度相关的UI更新逻辑
+        // 比如力度指示器、颜色变化等
     }
     
     /// <summary>
@@ -430,16 +432,19 @@ public class AimController : MonoBehaviour
     public void HideChargingUI()
     {
         isVisible = false;
-        currentForce = 0f;
+        
+        // 取消订阅蓄力系统事件
+        if (chargeSystem != null)
+        {
+            chargeSystem.OnChargingProgressChanged -= UpdateChargingProgress;
+            chargeSystem.OnForceChanged -= UpdateForceDisplay;
+        }
         
         // 隐藏蓄力条
         if (chargeBarUI != null)
         {
             chargeBarUI.SetVisible(false);
         }
-        
-        // 触发事件
-        OnForceChanged?.Invoke(0f);
         
         Debug.Log("AimController: 隐藏蓄力UI");
     }
@@ -609,7 +614,7 @@ public class AimController : MonoBehaviour
     // 公共方法
     public float GetCurrentForce()
     {
-        return currentForce;
+        return chargeSystem != null ? chargeSystem.GetCurrentForce() : 0f;
     }
     
     /// <summary>
@@ -632,6 +637,13 @@ public class AimController : MonoBehaviour
         Debug.Log($"AimController: 设置玩家核心引用为 {core.name}");
     }
     
+    // 手动设置蓄力系统引用（用于运行时动态设置）
+    public void SetChargeSystem(ChargeSystem system)
+    {
+        chargeSystem = system;
+        Debug.Log($"AimController: 设置蓄力系统引用为 {system.name}");
+    }
+    
     // 手动设置相机引用
     public void SetCamera(Camera camera)
     {
@@ -643,8 +655,14 @@ public class AimController : MonoBehaviour
     public void ResetController()
     {
         isVisible = false;
-        currentForce = 0f;
         aimDirection = Vector2.zero;
+        
+        // 取消订阅蓄力系统事件
+        if (chargeSystem != null)
+        {
+            chargeSystem.OnChargingProgressChanged -= UpdateChargingProgress;
+            chargeSystem.OnForceChanged -= UpdateForceDisplay;
+        }
         
         if (chargeBarUI != null)
         {

@@ -27,17 +27,14 @@ public class PlayerCore : MonoBehaviour, MMEventListener<AttackEvent>
     public BallData ballData; // 物理数据（由Player设置）
     public BallCombatData combatData; // 战斗数据（由Player设置）
     
-    [Header("蓄力设置")]
-    public float maxChargingTime = 2f; // 最大蓄力时间
-    public float chargingSpeed = 1f; // 蓄力速度
+    [Header("蓄力系统")]
+    public ChargeSystem chargeSystem; // 蓄力系统引用
     
     // 核心组件
     private BallPhysics ballPhysics;
     private HealthBar healthBar;
     
-    // 蓄力相关
-    private float chargingStartTime = 0f;
-    private float chargingPower = 0f;
+    // 蓄力相关（已移至ChargeSystem）
     
     // 事件
     public System.Action OnBallStopped;
@@ -148,58 +145,23 @@ public class PlayerCore : MonoBehaviour, MMEventListener<AttackEvent>
     
     #endregion
     
-    #region 蓄力系统
-    
-    /// <summary>
-    /// 开始蓄力
-    /// </summary>
-    public void StartCharging()
-    {
-        chargingStartTime = Time.time;
-        chargingPower = 0f;
-        Debug.Log("PlayerCore: 开始蓄力");
-    }
-    
-    /// <summary>
-    /// 更新蓄力进度
-    /// </summary>
-    public void UpdateChargingProgress()
-    {
-        float chargingTime = Time.time - chargingStartTime;
-        chargingPower = Mathf.Clamp01(chargingTime * chargingSpeed / maxChargingTime);
-        
-        // 蓄力完成
-        if (chargingPower >= 1f)
-        {
-            chargingPower = 1f;
-            Debug.Log("PlayerCore: 蓄力完成！");
-        }
-    }
-    
-    /// <summary>
-    /// 获取蓄力进度
-    /// </summary>
-    public float GetChargingProgress()
-    {
-        UpdateChargingProgress();
-        return chargingPower;
-    }
-    
-    /// <summary>
-    /// 重置蓄力
-    /// </summary>
-    public void ResetCharging()
-    {
-        chargingPower = 0f;
-        chargingStartTime = 0f;
-    }
+    #region 发射系统
     
     /// <summary>
     /// 发射蓄力攻击
     /// </summary>
     public void LaunchCharged()
     {
-        Debug.Log($"PlayerCore: 开始发射 - 蓄力强度={chargingPower:F2}");
+        if (chargeSystem == null)
+        {
+            Debug.LogError("PlayerCore: ChargeSystem未设置，无法发射");
+            return;
+        }
+        
+        float chargingPower = chargeSystem.GetChargingPower();
+        float currentForce = chargeSystem.GetCurrentForce();
+        
+        Debug.Log($"PlayerCore: 开始发射 - 蓄力强度={chargingPower:F2}, 力度={currentForce:F2}");
         
         // 消耗能量
         EnergySystem energySystem = FindFirstObjectByType<EnergySystem>();
@@ -214,9 +176,9 @@ public class PlayerCore : MonoBehaviour, MMEventListener<AttackEvent>
         mouseWorldPos.z = 0;
         Vector2 direction = (mouseWorldPos - transform.position).normalized;
         
-        // 计算发射力度（基于蓄力强度）
+        // 使用蓄力系统的力度
         float maxForce = ballData != null ? ballData.maxSpeed * 2f : 20;
-        float force = chargingPower * maxForce;
+        float force = currentForce * maxForce;
         
         Debug.Log($"PlayerCore: 发射参数 - 方向={direction}, 力度={force:F2}, 最大力度={maxForce}");
         
@@ -461,14 +423,14 @@ public class PlayerCore : MonoBehaviour, MMEventListener<AttackEvent>
     #region 公共属性
     
     /// <summary>
-    /// 蓄力强度 (0-1)
+    /// 蓄力强度 (0-1) - 从ChargeSystem获取
     /// </summary>
-    public float ChargingPower => chargingPower;
+    public float ChargingPower => chargeSystem != null ? chargeSystem.GetChargingPower() : 0f;
     
     /// <summary>
-    /// 蓄力进度百分比
+    /// 蓄力进度百分比 - 从ChargeSystem获取
     /// </summary>
-    public float ChargingProgress => chargingPower * 100f;
+    public float ChargingProgress => chargeSystem != null ? chargeSystem.GetChargingPower() * 100f : 0f;
     
     #endregion
     
@@ -492,6 +454,19 @@ public class PlayerCore : MonoBehaviour, MMEventListener<AttackEvent>
         }
         
         Debug.Log("PlayerCore: 重置为新回合");
+    }
+    
+    #endregion
+    
+    #region 组件设置
+    
+    /// <summary>
+    /// 设置蓄力系统引用
+    /// </summary>
+    public void SetChargeSystem(ChargeSystem system)
+    {
+        chargeSystem = system;
+        Debug.Log($"PlayerCore: 设置蓄力系统引用为 {system.name}");
     }
     
     #endregion

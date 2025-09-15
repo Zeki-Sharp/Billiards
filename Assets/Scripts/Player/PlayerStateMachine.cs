@@ -43,6 +43,7 @@ public class PlayerStateMachine : MonoBehaviour
     private PlayerCore playerCore;
     private AimController aimController;
     private GameFlowController gameFlowController;
+    private ChargeSystem chargeSystem;
     
     // 事件
     public System.Action<PlayerState, PlayerState> OnStateChanged;
@@ -53,6 +54,7 @@ public class PlayerStateMachine : MonoBehaviour
         playerCore = GetComponent<PlayerCore>();
         aimController = FindFirstObjectByType<AimController>();
         gameFlowController = GameFlowController.Instance;
+        chargeSystem = GetComponent<ChargeSystem>();
         
         // 初始化状态
         currentState = initialState;
@@ -130,10 +132,10 @@ public class PlayerStateMachine : MonoBehaviour
                 UpdateIdleState();
                 break;
             case PlayerState.Charging:
-                UpdateChargingState();
+                
                 break;
             case PlayerState.Moving:
-                UpdateMovingState();
+                
                 break;
         }
     }
@@ -150,9 +152,9 @@ public class PlayerStateMachine : MonoBehaviour
                 break;
             case PlayerState.Charging:
                 // 清理蓄力状态
-                if (playerCore != null)
+                if (chargeSystem != null)
                 {
-                    playerCore.ResetCharging();
+                    chargeSystem.StopCharging();
                 }
                 break;
             case PlayerState.Moving:
@@ -173,9 +175,9 @@ public class PlayerStateMachine : MonoBehaviour
                 break;
             case PlayerState.Charging:
                 // 进入蓄力状态
-                if (playerCore != null)
+                if (chargeSystem != null)
                 {
-                    playerCore.StartCharging();
+                    chargeSystem.StartCharging();
                 }
                 
                 // 显示蓄力UI
@@ -207,32 +209,7 @@ public class PlayerStateMachine : MonoBehaviour
         }
     }
     
-    /// <summary>
-    /// 更新蓄力状态
-    /// </summary>
-    void UpdateChargingState()
-    {
-        if (playerCore != null)
-        {
-            // 更新蓄力进度
-            float chargingProgress = playerCore.GetChargingProgress();
-            
-            // 通知AimController更新UI
-            if (aimController != null)
-            {
-                aimController.UpdateChargingUI(chargingProgress);
-            }
-        }
-    }
     
-    /// <summary>
-    /// 更新运动状态
-    /// </summary>
-    void UpdateMovingState()
-    {
-        // 运动状态由物理系统处理，这里不需要额外逻辑
-        // 状态转换由 PlayerCore 的 OnBallStopped 事件处理
-    }
     
     #endregion
     
@@ -308,6 +285,19 @@ public class PlayerStateMachine : MonoBehaviour
     /// 是否空闲
     /// </summary>
     public bool IsIdle => currentState == PlayerState.Idle;
+    
+    #endregion
+    
+    #region 组件设置
+    
+    /// <summary>
+    /// 设置蓄力系统引用
+    /// </summary>
+    public void SetChargeSystem(ChargeSystem system)
+    {
+        chargeSystem = system;
+        Debug.Log($"PlayerStateMachine: 设置蓄力系统引用为 {system.name}");
+    }
     
     #endregion
 }

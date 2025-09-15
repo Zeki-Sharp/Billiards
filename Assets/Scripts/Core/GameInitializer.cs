@@ -15,6 +15,7 @@ public class GameInitializer : MonoBehaviour
     private GameFlowController gameFlowController;
     private PlayerStateMachine playerStateMachine;
     private PlayerCore playerCore;
+    private ChargeSystem chargeSystem;
     private EnergySystem energySystem;
     private TimeStopManager timeStopManager;
     private TransitionManager transitionManager;
@@ -88,6 +89,7 @@ public class GameInitializer : MonoBehaviour
         }
         
         // 查找其他核心组件（如果存在）
+        chargeSystem = FindAnyObjectByType<ChargeSystem>();
         energySystem = FindAnyObjectByType<EnergySystem>();
         timeStopManager = FindAnyObjectByType<TimeStopManager>();
         transitionManager = FindAnyObjectByType<TransitionManager>();
@@ -182,6 +184,33 @@ public class GameInitializer : MonoBehaviour
                 if (playerCore != null)
                 {
                     gameFlowController.SetPlayerCore(playerCore);
+                }
+            }
+        }
+        
+        // 设置ChargeSystem的组件引用
+        if (chargeSystem != null)
+        {
+            // 设置Player相关引用
+            if (player != null)
+            {
+                PlayerStateMachine playerStateMachine = player.GetStateMachine();
+                PlayerCore playerCore = player.GetPlayerCore();
+                AimController aimController = FindAnyObjectByType<AimController>();
+                
+                if (playerStateMachine != null)
+                {
+                    playerStateMachine.SetChargeSystem(chargeSystem);
+                }
+                
+                if (playerCore != null)
+                {
+                    playerCore.SetChargeSystem(chargeSystem);
+                }
+                
+                if (aimController != null)
+                {
+                    aimController.SetChargeSystem(chargeSystem);
                 }
             }
         }
