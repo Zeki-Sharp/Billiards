@@ -25,6 +25,9 @@ public class ChargeSystem : MonoBehaviour
     [SerializeField] private bool useCyclingCharge = true; // 是否使用循环蓄力
     [SerializeField] private float cycleSpeed = 3f; // 循环速度
     
+    [Header("能量设置")]
+    [SerializeField] private float energyConsumptionRate = 20f; // 每秒消耗能量
+    
     [Header("调试")]
     [SerializeField] private bool showDebugInfo = true;
     
@@ -34,12 +37,26 @@ public class ChargeSystem : MonoBehaviour
     private float chargingPower = 0f; // 蓄力进度 (0-1)
     private float currentForce = 0f; // 当前力度
     
+    // 能量系统引用
+    private EnergySystem energySystem;
+    
     // 事件
     public System.Action<float> OnChargingProgressChanged; // 蓄力进度变化 (0-1)
     public System.Action<float> OnForceChanged; // 力度变化
     public System.Action OnChargingStarted; // 开始蓄力
     public System.Action OnChargingCompleted; // 蓄力完成
     public System.Action OnChargingStopped; // 停止蓄力
+    public System.Action OnEnergyDepleted; // 能量耗尽事件
+    
+    void Start()
+    {
+        // 获取能量系统引用
+        energySystem = FindFirstObjectByType<EnergySystem>();
+        if (energySystem == null)
+        {
+            Debug.LogWarning("ChargeSystem: 未找到EnergySystem，能量消耗功能将不可用");
+        }
+    }
     
     void Update()
     {
@@ -116,6 +133,23 @@ public class ChargeSystem : MonoBehaviour
     void UpdateChargingProgress()
     {
         if (!isCharging) return;
+        
+        // 持续消耗能量
+        if (energySystem != null)
+        {
+            if (!energySystem.ConsumeEnergyOverTime(energyConsumptionRate))
+            {
+                // 能量耗尽，停止蓄力并通知
+                StopCharging();
+                OnEnergyDepleted?.Invoke();
+                
+                if (showDebugInfo)
+                {
+                    Debug.Log("ChargeSystem: 能量耗尽，强制停止蓄力");
+                }
+                return;
+            }
+        }
         
         // 计算蓄力进度
         float chargingTime = Time.time - chargingStartTime;
@@ -260,6 +294,20 @@ public class ChargeSystem : MonoBehaviour
     public float MinForce => minForce;
     public bool UseCyclingCharge => useCyclingCharge;
     public float CycleSpeed => cycleSpeed;
+    public float EnergyConsumptionRate => energyConsumptionRate;
+    
+    #endregion
+    
+    #region 组件设置
+    
+    /// <summary>
+    /// 设置能量系统引用
+    /// </summary>
+    public void SetEnergySystem(EnergySystem system)
+    {
+        energySystem = system;
+        Debug.Log($"ChargeSystem: 设置能量系统引用为 {system.name}");
+    }
     
     #endregion
 }

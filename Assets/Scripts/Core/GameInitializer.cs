@@ -191,6 +191,9 @@ public class GameInitializer : MonoBehaviour
         // 设置ChargeSystem的组件引用
         if (chargeSystem != null)
         {
+            // 设置能量系统引用
+            chargeSystem.SetEnergySystem(energySystem);
+            
             // 设置Player相关引用
             if (player != null)
             {

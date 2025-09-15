@@ -9971,9 +9971,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxEnergy: 100
   currentEnergy: 100
-  energyRegenRate: 10
-  energyConsumeRate: 50
-  energyThreshold: 80
+  energyRegenRate: 20
+  energyConsumeRate: 20
+  energyThreshold: 100
+  recoveryEnabled: 1
   showDebugInfo: 1
 --- !u!4 &2021852713
 Transform:
@@ -10438,6 +10439,7 @@ MonoBehaviour:
   minForce: 1
   useCyclingCharge: 1
   cycleSpeed: 3
+  energyConsumptionRate: 20
   showDebugInfo: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

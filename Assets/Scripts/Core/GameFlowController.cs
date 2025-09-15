@@ -121,6 +121,12 @@ public class GameFlowController : MonoBehaviour
             timeStopManager.ReleaseTimeStop();
         }
         
+        // 启用能量恢复
+        if (energySystem != null)
+        {
+            energySystem.SetRecoveryEnabled(true);
+        }
+        
         // 重置发射状态
         hasPlayerLaunched = false;
         
@@ -146,6 +152,12 @@ public class GameFlowController : MonoBehaviour
             timeStopManager.ApplyTimeStop();
         }
         
+        // 禁用能量恢复
+        if (energySystem != null)
+        {
+            energySystem.SetRecoveryEnabled(false);
+        }
+        
         // 触发状态变化事件
         OnStateChanged?.Invoke(currentState);
         
@@ -166,6 +178,12 @@ public class GameFlowController : MonoBehaviour
         if (timeStopManager != null)
         {
             timeStopManager.ApplyPartialTimeStop();
+        }
+        
+        // 启用能量恢复
+        if (energySystem != null)
+        {
+            energySystem.SetRecoveryEnabled(true);
         }
         
         // 开始过渡
