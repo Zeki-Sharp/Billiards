@@ -1,8 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
-using MoreMountains.Tools;
 
-public class Enemy : MonoBehaviour, MMEventListener<AttackEvent>
+public class Enemy : MonoBehaviour
 {
     [Header("数据设置")]
     public BallData ballData; // 物理数据
@@ -53,12 +52,14 @@ public class Enemy : MonoBehaviour, MMEventListener<AttackEvent>
     
     void OnEnable()
     {
-        this.MMEventStartListening<AttackEvent>();
+        // 订阅攻击事件
+        EventTrigger.OnAttack += HandleAttack;
     }
     
     void OnDisable()
     {
-        this.MMEventStopListening<AttackEvent>();
+        // 取消订阅攻击事件
+        EventTrigger.OnAttack -= HandleAttack;
     }
     
     public void InitializeAttackRange()
@@ -212,20 +213,20 @@ public class Enemy : MonoBehaviour, MMEventListener<AttackEvent>
     }
     
     /// <summary>
-    /// 处理攻击事件（MMEventListener接口实现）
+    /// 处理攻击事件（C# Action 实现）
     /// 当自己是攻击目标时处理伤害
     /// </summary>
-    public void OnMMEvent(AttackEvent attackEvent)
+    private void HandleAttack(AttackData attackData)
     {
-        Debug.Log($"Enemy {name} 收到攻击事件: 目标={attackEvent.Target?.name}, 伤害={attackEvent.Damage}, 自己={gameObject.name}");
+        Debug.Log($"Enemy {name} 收到攻击事件: 目标={attackData.Target?.name}, 伤害={attackData.Damage}, 自己={gameObject.name}");
         
         // 检查自己是否是攻击目标
-        if (attackEvent.Target == gameObject && attackEvent.Damage > 0f)
+        if (attackData.Target == gameObject && attackData.Damage > 0f)
         {
-            Debug.Log($"Enemy {name} 是攻击目标，处理伤害: {attackEvent.Damage}");
+            Debug.Log($"Enemy {name} 是攻击目标，处理伤害: {attackData.Damage}");
             
             // 处理伤害
-            TakeDamage(attackEvent.Damage);
+            TakeDamage(attackData.Damage);
         }
         else
         {

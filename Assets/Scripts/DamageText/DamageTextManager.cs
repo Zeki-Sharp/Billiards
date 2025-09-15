@@ -1,15 +1,14 @@
 using UnityEngine;
 using System.Collections.Generic;
-using MoreMountains.Tools;
 using UnityEngine.UI;
 using MoreMountains.Feedbacks;
 
 /// <summary>
 /// 伤害数字管理器
 /// 负责全局伤害数字的生成、回收和对象池管理
-/// 监听 AttackEvent 系统，当有伤害值时显示伤害数字
+/// 监听攻击事件系统，当有伤害值时显示伤害数字
 /// </summary>
-public class DamageTextManager : MonoBehaviour, MMEventListener<AttackEvent>
+public class DamageTextManager : MonoBehaviour
 {
     public static DamageTextManager Instance { get; private set; }
     
@@ -70,12 +69,14 @@ public class DamageTextManager : MonoBehaviour, MMEventListener<AttackEvent>
     
     void OnEnable()
     {
-        this.MMEventStartListening<AttackEvent>();
+        // 订阅攻击事件
+        EventTrigger.OnAttack += HandleAttack;
     }
     
     void OnDisable()
     {
-        this.MMEventStopListening<AttackEvent>();
+        // 取消订阅攻击事件
+        EventTrigger.OnAttack -= HandleAttack;
     }
     
     /// <summary>
@@ -330,32 +331,32 @@ public class DamageTextManager : MonoBehaviour, MMEventListener<AttackEvent>
     }
     
     /// <summary>
-    /// 事件监听 - 处理 AttackEvent 中的伤害数字事件
+    /// 事件监听 - 处理攻击事件中的伤害数字事件
     /// </summary>
-    /// <param name="attackEvent">攻击事件</param>
-    public void OnMMEvent(AttackEvent attackEvent)
+    /// <param name="attackData">攻击数据</param>
+    private void HandleAttack(AttackData attackData)
     {
         if (enableDebugLog)
         {
-            Debug.Log($"DamageTextManager: 收到攻击事件，攻击类型: {attackEvent.AttackType}, 伤害值: {attackEvent.Damage}, 位置: {attackEvent.Position}, 目标: {attackEvent.Target?.name}");
+            Debug.Log($"DamageTextManager: 收到攻击事件，攻击类型: {attackData.AttackType}, 伤害值: {attackData.Damage}, 位置: {attackData.Position}, 目标: {attackData.Target?.name}");
         }
         
         // 检查是否有伤害值且大于0
-        if (attackEvent.Damage > 0f)
+        if (attackData.Damage > 0f)
         {
             // 显示伤害数字
-            ShowDamageText(attackEvent.Position, attackEvent.Damage, attackEvent.Target);
+            ShowDamageText(attackData.Position, attackData.Damage, attackData.Target);
             
             if (enableDebugLog)
             {
-                Debug.Log($"DamageTextManager: 显示伤害数字 {attackEvent.Damage} 在位置 {attackEvent.Position}");
+                Debug.Log($"DamageTextManager: 显示伤害数字 {attackData.Damage} 在位置 {attackData.Position}");
             }
         }
         else
         {
             if (enableDebugLog)
             {
-                Debug.Log($"DamageTextManager: 伤害值为 {attackEvent.Damage}，不显示伤害数字");
+                Debug.Log($"DamageTextManager: 伤害值为 {attackData.Damage}，不显示伤害数字");
             }
         }
     }

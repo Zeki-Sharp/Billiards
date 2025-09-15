@@ -2,14 +2,18 @@ using UnityEngine;
 
 /// <summary>
 /// 统一的事件触发接口
-/// 提供简化的静态方法，内部调用MMEventManager
+/// 实现游戏逻辑和表现的桥接机制
 /// </summary>
 public static class EventTrigger
 {
+    // 游戏逻辑事件 - C# Action
+    public static System.Action<AttackData> OnAttack; // 攻击逻辑事件
+    public static System.Action<DeathData> OnDeath;   // 死亡逻辑事件
+    
     #region 通用攻击方法
     
     /// <summary>
-    /// 通用攻击事件 - 触发攻击相关的游戏逻辑
+    /// 通用攻击事件 - 触发攻击相关的游戏逻辑和表现
     /// </summary>
     /// <param name="attackType">攻击类型：Hit, Shoot, Skill, Magic 等</param>
     /// <param name="position">攻击位置</param>
@@ -19,8 +23,29 @@ public static class EventTrigger
     /// <param name="damage">伤害值（可选，默认为0）</param>
     public static void Attack(string attackType, Vector3 position, Vector3 direction, GameObject attacker, GameObject target, float damage = 0f)
     {
-        // 触发攻击事件，由各系统监听处理
-        AttackEvent.Trigger(attackType, position, direction, attacker, target, damage);
+        // 创建攻击数据
+        var attackData = new AttackData
+        {
+            AttackType = attackType,
+            Position = position,
+            Direction = direction,
+            Attacker = attacker,
+            Target = target,
+            Damage = damage,
+            AttackTime = Time.time,
+            AttackerTag = attacker != null ? attacker.tag : "",
+            TargetTag = target != null ? target.tag : "",
+            HitNormal = Vector3.zero,
+            HitSpeed = 0f,
+            WallHitRotationAngle = 0f,
+            WallHitPositionOffset = Vector3.zero
+        };
+        
+        // 触发游戏逻辑事件
+        OnAttack?.Invoke(attackData);
+        
+        // 触发表现事件
+        AttackEffectEvent.Trigger(attackData);
         
         if (Debug.isDebugBuild)
         {
@@ -43,8 +68,29 @@ public static class EventTrigger
     /// <param name="damage">伤害值（可选，默认为0）</param>
     public static void Attack(string attackType, Vector3 position, Vector3 direction, GameObject attacker, GameObject target, Vector3 hitNormal, float speed, float rotationAngle = 0f, Vector3 positionOffset = default, float damage = 0f)
     {
-        // 触发攻击事件（带撞墙参数），由各系统监听处理
-        AttackEvent.Trigger(attackType, position, direction, attacker, target, damage, hitNormal, speed, rotationAngle, positionOffset);
+        // 创建攻击数据
+        var attackData = new AttackData
+        {
+            AttackType = attackType,
+            Position = position,
+            Direction = direction,
+            Attacker = attacker,
+            Target = target,
+            Damage = damage,
+            AttackTime = Time.time,
+            AttackerTag = attacker != null ? attacker.tag : "",
+            TargetTag = target != null ? target.tag : "",
+            HitNormal = hitNormal,
+            HitSpeed = speed,
+            WallHitRotationAngle = rotationAngle,
+            WallHitPositionOffset = positionOffset
+        };
+        
+        // 触发游戏逻辑事件
+        OnAttack?.Invoke(attackData);
+        
+        // 触发表现事件
+        AttackEffectEvent.Trigger(attackData);
         
         if (Debug.isDebugBuild)
         {
@@ -73,12 +119,28 @@ public static class EventTrigger
     }
     
     /// <summary>
-    /// 触发死亡事件
+    /// 触发死亡事件 - 触发死亡相关的游戏逻辑和表现
     /// </summary>
     public static void Dead(Vector3 position, Vector3 direction, GameObject target)
     {
+        // 创建死亡数据
+        var deathData = new DeathData
+        {
+            DeathType = "EnemyDeath",
+            Position = position,
+            Direction = direction,
+            DeadObject = target,
+            DeadObjectTag = target != null ? target.tag : "",
+            DeathTime = Time.time
+        };
+        
+        // 触发游戏逻辑事件
+        OnDeath?.Invoke(deathData);
+        
+        // 触发表现事件
+        DeathEffectEvent.Trigger(deathData);
+        
         Debug.Log($"EventTrigger.Dead: 触发死亡事件，目标: {target?.name}");
-        DeathEvent.Trigger("EnemyDeath", position, direction, target);
     }
     
     /// <summary>

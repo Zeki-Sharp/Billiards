@@ -1,13 +1,10 @@
 using UnityEngine;
 
-/// <summary>
-/// 游戏事件定义
-/// 使用简单的结构体，便于MMEventManager处理
-/// </summary>
+
 /// <summary>
 /// 特效事件定义（简化版）
 /// 用于非攻击相关的特效，如环境特效、UI特效等
-/// 攻击相关特效通过 AttackEvent 处理
+/// 攻击相关特效通过 AttackEffectEvent 处理
 /// </summary>
 public struct EffectEvent
 {
@@ -37,11 +34,15 @@ public struct EffectEvent
     }
 }
 
+// 旧的 AttackEvent 和 DeathEvent 已移除，改用新的分离式架构
+
+
+
 /// <summary>
-/// 攻击事件定义
-/// 负责攻击相关的游戏逻辑，包括伤害计算、状态变化等
+/// 攻击数据 - 用于游戏逻辑层
+/// 包含攻击相关的所有信息，但不包含表现相关数据
 /// </summary>
-public struct AttackEvent
+public struct AttackData
 {
     public string AttackType;        // 攻击类型：Hit, Shoot, Skill, Magic等
     public Vector3 Position;         // 攻击位置
@@ -58,63 +59,13 @@ public struct AttackEvent
     public float HitSpeed;           // 撞击速度
     public float WallHitRotationAngle;    // 墙面撞击旋转角度
     public Vector3 WallHitPositionOffset; // 墙面撞击位置偏移
-    
-    /// <summary>
-    /// 触发攻击事件（简化版本）
-    /// </summary>
-    public static void Trigger(string attackType, Vector3 position, Vector3 direction, GameObject attacker, GameObject target, float damage = 0f)
-    {
-        var attackEvent = new AttackEvent
-        {
-            AttackType = attackType,
-            Position = position,
-            Direction = direction,
-            Attacker = attacker,
-            Target = target,
-            Damage = damage,
-            AttackTime = Time.time,
-            AttackerTag = attacker != null ? attacker.tag : "",
-            TargetTag = target != null ? target.tag : "",
-            HitNormal = Vector3.zero,
-            HitSpeed = 0f,
-            WallHitRotationAngle = 0f,
-            WallHitPositionOffset = Vector3.zero
-        };
-        
-        MoreMountains.Tools.MMEventManager.TriggerEvent(attackEvent);
-    }
-    
-    /// <summary>
-    /// 触发攻击事件（带撞墙参数版本）
-    /// </summary>
-    public static void Trigger(string attackType, Vector3 position, Vector3 direction, GameObject attacker, GameObject target, float damage, Vector3 hitNormal, float hitSpeed, float wallHitRotationAngle = 0f, Vector3 wallHitPositionOffset = default)
-    {
-        var attackEvent = new AttackEvent
-        {
-            AttackType = attackType,
-            Position = position,
-            Direction = direction,
-            Attacker = attacker,
-            Target = target,
-            Damage = damage,
-            AttackTime = Time.time,
-            AttackerTag = attacker != null ? attacker.tag : "",
-            TargetTag = target != null ? target.tag : "",
-            HitNormal = hitNormal,
-            HitSpeed = hitSpeed,
-            WallHitRotationAngle = wallHitRotationAngle,
-            WallHitPositionOffset = wallHitPositionOffset
-        };
-        
-        MoreMountains.Tools.MMEventManager.TriggerEvent(attackEvent);
-    }
 }
 
 /// <summary>
-/// 死亡事件定义
-/// 负责死亡相关的游戏逻辑，包括特效播放、对象销毁、状态更新等
+/// 死亡数据 - 用于游戏逻辑层
+/// 包含死亡相关的所有信息，但不包含表现相关数据
 /// </summary>
-public struct DeathEvent
+public struct DeathData
 {
     public string DeathType;        // 死亡类型：EnemyDeath, PlayerDeath等
     public Vector3 Position;        // 死亡位置
@@ -122,31 +73,81 @@ public struct DeathEvent
     public GameObject DeadObject;   // 死亡对象
     public string DeadObjectTag;    // 死亡对象标签
     public float DeathTime;         // 死亡时间戳
+}
+
+/// <summary>
+/// 攻击特效事件 - 纯表现层
+/// 用于播放攻击相关的特效、音效等
+/// </summary>
+public struct AttackEffectEvent
+{
+    public string AttackType;        // 攻击类型：Hit, Shoot, Skill, Magic等
+    public Vector3 Position;         // 攻击位置
+    public Vector3 Direction;        // 攻击方向
+    public GameObject Attacker;      // 攻击者
+    public GameObject Target;        // 目标对象
+    public float Damage;             // 伤害值（用于特效强度）
+    public string AttackerTag;       // 攻击者标签
+    public string TargetTag;         // 目标标签
+    
+    // 撞墙相关参数（用于特效）
+    public Vector3 HitNormal;        // 撞击法线
+    public float HitSpeed;           // 撞击速度
+    public float WallHitRotationAngle;    // 墙面撞击旋转角度
+    public Vector3 WallHitPositionOffset; // 墙面撞击位置偏移
     
     /// <summary>
-    /// 触发死亡事件
+    /// 触发攻击特效事件
     /// </summary>
-    public static void Trigger(string deathType, Vector3 position, Vector3 direction, GameObject deadObject)
+    public static void Trigger(AttackData attackData)
     {
-        Debug.Log($"DeathEvent.Trigger: 创建死亡事件，类型: {deathType}, 对象: {deadObject?.name}");
-        
-        var deathEvent = new DeathEvent
+        var attackEffectEvent = new AttackEffectEvent
         {
-            DeathType = deathType,
-            Position = position,
-            Direction = direction,
-            DeadObject = deadObject,
-            DeadObjectTag = deadObject != null ? deadObject.tag : "",
-            DeathTime = Time.time
+            AttackType = attackData.AttackType,
+            Position = attackData.Position,
+            Direction = attackData.Direction,
+            Attacker = attackData.Attacker,
+            Target = attackData.Target,
+            Damage = attackData.Damage,
+            AttackerTag = attackData.AttackerTag,
+            TargetTag = attackData.TargetTag,
+            HitNormal = attackData.HitNormal,
+            HitSpeed = attackData.HitSpeed,
+            WallHitRotationAngle = attackData.WallHitRotationAngle,
+            WallHitPositionOffset = attackData.WallHitPositionOffset
         };
         
-        Debug.Log($"DeathEvent.Trigger: 通过 MMEventManager 触发死亡事件");
-        MoreMountains.Tools.MMEventManager.TriggerEvent(deathEvent);
+        MoreMountains.Tools.MMEventManager.TriggerEvent(attackEffectEvent);
     }
 }
 
-// GameStateEvent 已移除，改用各系统的 C# Action 事件
-// 例如：energySystem.OnEnergyChanged, transitionManager.OnTransitionStart 等
-
-// 复杂的状态机通信事件已移除，改为直接引用通信
+/// <summary>
+/// 死亡特效事件 - 纯表现层
+/// 用于播放死亡相关的特效、音效等
+/// </summary>
+public struct DeathEffectEvent
+{
+    public string DeathType;        // 死亡类型：EnemyDeath, PlayerDeath等
+    public Vector3 Position;        // 死亡位置
+    public Vector3 Direction;       // 死亡方向（可选）
+    public GameObject DeadObject;   // 死亡对象
+    public string DeadObjectTag;    // 死亡对象标签
+    
+    /// <summary>
+    /// 触发死亡特效事件
+    /// </summary>
+    public static void Trigger(DeathData deathData)
+    {
+        var deathEffectEvent = new DeathEffectEvent
+        {
+            DeathType = deathData.DeathType,
+            Position = deathData.Position,
+            Direction = deathData.Direction,
+            DeadObject = deathData.DeadObject,
+            DeadObjectTag = deathData.DeadObjectTag
+        };
+        
+        MoreMountains.Tools.MMEventManager.TriggerEvent(deathEffectEvent);
+    }
+}
 
