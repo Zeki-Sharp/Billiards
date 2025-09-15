@@ -7,14 +7,15 @@ using MoreMountains.Tools;
 /// 【核心职责】：
 /// - 管理游戏全局流程状态（Normal/Charging/Transition）
 /// - 协调时停系统、过渡系统、敌人系统等
-/// - 通过事件与Player系统通信，避免直接耦合
+/// - 通过MM事件系统与Player系统通信，避免直接耦合
 /// 
 /// 【设计原则】：
 /// - 不直接检测玩家输入（由PlayerInputHandler处理）
 /// - 不直接访问Player内部组件（通过事件通信）
 /// - 专注于游戏流程逻辑，不处理具体的玩家行为
+/// - 状态独立：不直接检查其他状态机的内部状态
 /// </summary>
-public class GameFlowController : MonoBehaviour
+public class GameFlowController : MonoBehaviour, MMEventListener<GameStateEvent>, MMEventListener<PlayerStateChangeEvent>
 {
     public static GameFlowController Instance { get; private set; }
     
@@ -66,6 +67,20 @@ public class GameFlowController : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+    }
+    
+    void OnEnable()
+    {
+        // 注册事件监听
+        this.MMEventStartListening<GameStateEvent>();
+        this.MMEventStartListening<PlayerStateChangeEvent>();
+    }
+    
+    void OnDisable()
+    {
+        // 注销事件监听
+        this.MMEventStopListening<GameStateEvent>();
+        this.MMEventStopListening<PlayerStateChangeEvent>();
     }
     
     void Update()
@@ -125,10 +140,8 @@ public class GameFlowController : MonoBehaviour
         hasPlayerLaunched = false;
         
         // 触发状态变化事件
+        TriggerFlowStateChangeEvent(oldState, currentState);
         OnStateChanged?.Invoke(currentState);
-        
-        // 触发MM事件
-        GameStateEvent.Trigger("Normal", 0, 0f, oldState.ToString());
         
         if (showDebugInfo)
         {
@@ -150,10 +163,8 @@ public class GameFlowController : MonoBehaviour
         }
         
         // 触发状态变化事件
+        TriggerFlowStateChangeEvent(oldState, currentState);
         OnStateChanged?.Invoke(currentState);
-        
-        // 触发MM事件
-        GameStateEvent.Trigger("Charging", 0, 0f, oldState.ToString());
         
         if (showDebugInfo)
         {
@@ -181,10 +192,8 @@ public class GameFlowController : MonoBehaviour
         }
         
         // 触发状态变化事件
+        TriggerFlowStateChangeEvent(oldState, currentState);
         OnStateChanged?.Invoke(currentState);
-        
-        // 触发MM事件
-        GameStateEvent.Trigger("Transition", 0, 0f, oldState.ToString());
         
         if (showDebugInfo)
         {
@@ -274,6 +283,87 @@ public class GameFlowController : MonoBehaviour
     
     #endregion
     
+    #region 事件处理
+    
+    /// <summary>
+    /// 处理游戏状态事件
+    /// </summary>
+    public void OnMMEvent(GameStateEvent gameEvent)
+    {
+        switch (gameEvent.StateName)
+        {
+            case "RequestCharging":
+                // 处理蓄力请求（由PlayerInputHandler触发）
+                if (CanEnterChargingState())
+                {
+                    SwitchToChargingState();
+                }
+                break;
+                
+            case "RequestTransition":
+                // 处理过渡请求（由PlayerStateMachine触发）
+                if (CanEnterTransitionState())
+                {
+                    SwitchToTransitionState();
+                }
+                break;
+                
+            case "RequestNormal":
+                // 处理正常状态请求（由PlayerStateMachine触发）
+                if (CanReturnToNormalState())
+                {
+                    SwitchToNormalState();
+                }
+                break;
+        }
+    }
+    
+    /// <summary>
+    /// 处理玩家状态变化事件
+    /// </summary>
+    public void OnMMEvent(PlayerStateChangeEvent playerEvent)
+    {
+        // 根据玩家状态变化调整游戏流程
+        switch (playerEvent.StateType)
+        {
+            case "Moving":
+                // 玩家开始移动，检查是否需要进入过渡状态
+                if (currentState == GameFlowState.Charging && CanEnterTransitionState())
+                {
+                    SwitchToTransitionState();
+                }
+                break;
+                
+            case "Idle":
+                // 玩家回到空闲，检查是否需要回到正常状态
+                if (currentState == GameFlowState.Transition && CanReturnToNormalState())
+                {
+                    SwitchToNormalState();
+                }
+                break;
+        }
+    }
+    
+    /// <summary>
+    /// 触发游戏流程状态变化事件
+    /// </summary>
+    void TriggerFlowStateChangeEvent(GameFlowState fromState, GameFlowState toState)
+    {
+        string fromStateName = fromState.ToString();
+        string toStateName = toState.ToString();
+        string flowType = toStateName;
+        
+        // 根据目标状态设置标志
+        bool isTimeStopped = toState == GameFlowState.Charging;
+        bool isPartialTimeStop = toState == GameFlowState.Transition;
+        bool canPlayerMove = toState == GameFlowState.Normal || toState == GameFlowState.Transition;
+        
+        // 触发MM事件
+        EventTrigger.GameFlowStateChanged(fromStateName, toStateName, flowType, isTimeStopped, isPartialTimeStop, canPlayerMove);
+    }
+    
+    #endregion
+    
     #region 游戏逻辑
     
     void LaunchPlayer()
@@ -298,16 +388,6 @@ public class GameFlowController : MonoBehaviour
         OnGameStart?.Invoke();
     }
     
-    /// <summary>
-    /// 由PlayerInputHandler调用，当检测到蓄力输入时进入蓄力状态
-    /// </summary>
-    public void RequestChargingState()
-    {
-        if (CanEnterChargingState())
-        {
-            SwitchToChargingState();
-        }
-    }
     
     #endregion
     

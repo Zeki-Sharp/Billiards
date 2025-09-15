@@ -1,4 +1,5 @@
 using UnityEngine;
+using MoreMountains.Tools;
 
 /// <summary>
 /// 玩家状态机 - 管理玩家的状态转换和逻辑
@@ -7,7 +8,7 @@ using UnityEngine;
 /// - 管理玩家的三种状态：Idle（空闲）、Charging（蓄力）、Moving（运动）
 /// - 处理状态间的转换逻辑和条件判断
 /// - 协调PlayerCore和AimController的UI显示
-/// - 提供状态查询接口供其他组件使用
+/// - 通过事件与其他系统通信，避免直接耦合
 /// 
 /// 【状态定义】：
 /// - Idle: 可以移动和开始蓄力
@@ -17,9 +18,10 @@ using UnityEngine;
 /// 【设计原则】：
 /// - 单一职责：只管理玩家状态，不处理具体业务逻辑
 /// - 状态驱动：根据当前状态决定允许的操作
-/// - 事件通知：状态变化时通知相关组件
+/// - 事件通信：通过MM事件系统与其他状态机通信
+/// - 状态独立：不直接访问其他状态机的内部状态
 /// </summary>
-public class PlayerStateMachine : MonoBehaviour
+public class PlayerStateMachine : MonoBehaviour, MMEventListener<GameStateEvent>
 {
     /// <summary>
     /// 玩家状态枚举
@@ -61,6 +63,18 @@ public class PlayerStateMachine : MonoBehaviour
         }
     }
     
+    void OnEnable()
+    {
+        // 注册事件监听
+        this.MMEventStartListening<GameStateEvent>();
+    }
+    
+    void OnDisable()
+    {
+        // 注销事件监听
+        this.MMEventStopListening<GameStateEvent>();
+    }
+    
     void Update()
     {
         UpdateCurrentState();
@@ -80,11 +94,49 @@ public class PlayerStateMachine : MonoBehaviour
         currentState = newState;
         EnterState(newState);
         
+        // 触发状态变化事件
+        TriggerStateChangeEvent(oldState, newState);
+        
         OnStateChanged?.Invoke(newState, oldState);
         
         if (showDebugInfo)
         {
             Debug.Log($"PlayerStateMachine: 状态切换 {oldState} -> {newState}");
+        }
+    }
+    
+    /// <summary>
+    /// 触发状态变化事件
+    /// </summary>
+    void TriggerStateChangeEvent(PlayerState fromState, PlayerState toState)
+    {
+        string fromStateName = fromState.ToString();
+        string toStateName = toState.ToString();
+        string stateType = toStateName;
+        
+        // 根据目标状态设置能力标志
+        bool canMove = toState == PlayerState.Idle;
+        bool canCharge = toState == PlayerState.Idle;
+        bool isPhysicsMoving = toState == PlayerState.Moving;
+        
+        // 触发MM事件
+        EventTrigger.PlayerStateChanged(fromStateName, toStateName, stateType, canMove, canCharge, isPhysicsMoving);
+        
+        // 根据状态变化触发相应的游戏流程事件
+        if (toState == PlayerState.Charging && fromState == PlayerState.Idle)
+        {
+            // 从空闲到蓄力：请求进入蓄力状态
+            EventTrigger.RequestChargingState();
+        }
+        else if (toState == PlayerState.Moving && fromState == PlayerState.Charging)
+        {
+            // 从蓄力到移动：GameFlow不变，不需要触发事件
+            // GameFlow保持Charging状态
+        }
+        else if (toState == PlayerState.Idle && fromState == PlayerState.Moving)
+        {
+            // 从移动到空闲：请求进入过渡状态
+            EventTrigger.RequestTransitionState();
         }
     }
     
@@ -250,6 +302,35 @@ public class PlayerStateMachine : MonoBehaviour
         if (currentState == PlayerState.Moving)
         {
             SwitchToState(PlayerState.Idle);
+        }
+    }
+    
+    #endregion
+    
+    #region 事件处理
+    
+    /// <summary>
+    /// 处理MM事件
+    /// </summary>
+    public void OnMMEvent(GameStateEvent gameEvent)
+    {
+        switch (gameEvent.StateName)
+        {
+            case "RequestCharging":
+                // 处理蓄力请求（由PlayerInputHandler触发）
+                if (currentState == PlayerState.Idle)
+                {
+                    StartCharging();
+                }
+                break;
+                
+            case "ForceIdle":
+                // 强制切换到空闲状态（由GameFlowController触发）
+                if (currentState != PlayerState.Idle)
+                {
+                    SwitchToState(PlayerState.Idle);
+                }
+                break;
         }
     }
     
