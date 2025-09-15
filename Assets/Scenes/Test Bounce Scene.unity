@@ -10631,7 +10631,7 @@ MonoBehaviour:
   maxEnergy: 100
   currentEnergy: 100
   energyRegenRate: 20
-  energyConsumeRate: 40
+  energyConsumeRate: 35
   energyThreshold: 100
   recoveryEnabled: 1
   showDebugInfo: 1

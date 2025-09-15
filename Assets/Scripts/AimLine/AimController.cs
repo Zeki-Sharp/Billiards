@@ -104,6 +104,17 @@ public class AimController : MonoBehaviour
             }
         }
         
+        // 获取蓄力条UI - 使用延迟查找
+        if (chargeBarUI == null)
+        {
+            chargeBarUI = FindAnyObjectByType<ChargeBarUI>();
+            if (chargeBarUI == null)
+            {
+                Debug.LogWarning("AimController: 当前找不到ChargeBarUI，将在下一帧重试");
+                return;
+            }
+        }
+        
         // 设置瞄准线
         SetupAimLine();
         
@@ -139,6 +150,12 @@ public class AimController : MonoBehaviour
             if (chargeSystem == null)
             {
                 chargeSystem = FindAnyObjectByType<ChargeSystem>();
+            }
+            
+            // 查找蓄力条UI
+            if (chargeBarUI == null)
+            {
+                chargeBarUI = FindAnyObjectByType<ChargeBarUI>();
             }
             
             // 设置瞄准线
@@ -381,6 +398,11 @@ public class AimController : MonoBehaviour
         if (chargeBarUI != null)
         {
             chargeBarUI.SetVisible(true);
+            Debug.Log("AimController: ChargeBarUI 已显示");
+        }
+        else
+        {
+            Debug.LogWarning("AimController: ChargeBarUI 为 null，无法显示蓄力条");
         }
         
         // 订阅蓄力系统事件
@@ -388,6 +410,11 @@ public class AimController : MonoBehaviour
         {
             chargeSystem.OnChargingProgressChanged += UpdateChargingProgress;
             chargeSystem.OnForceChanged += UpdateForceDisplay;
+            Debug.Log("AimController: 已订阅蓄力系统事件");
+        }
+        else
+        {
+            Debug.LogWarning("AimController: ChargeSystem 为 null，无法订阅事件");
         }
         
         // 触发蓄力开始特效
@@ -411,6 +438,11 @@ public class AimController : MonoBehaviour
         if (chargeBarUI != null)
         {
             chargeBarUI.UpdateCharge(chargingProgress);
+            Debug.Log($"AimController: 更新蓄力进度 {chargingProgress:F2}");
+        }
+        else
+        {
+            Debug.LogWarning("AimController: ChargeBarUI 为 null，无法更新蓄力进度");
         }
     }
     
