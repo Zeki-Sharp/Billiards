@@ -11083,9 +11083,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxChargingTime: 2
   chargingSpeed: 1
-  maxForce: 10
+  maxForce: 40
   minForce: 1
-  useCyclingCharge: 1
+  useCyclingCharge: 0
   cycleSpeed: 3
   showDebugInfo: 1
 --- !u!1660057539 &9223372036854775807

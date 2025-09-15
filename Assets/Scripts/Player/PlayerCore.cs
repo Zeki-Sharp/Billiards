@@ -176,11 +176,10 @@ public class PlayerCore : MonoBehaviour, MMEventListener<AttackEvent>
         mouseWorldPos.z = 0;
         Vector2 direction = (mouseWorldPos - transform.position).normalized;
         
-        // 使用蓄力系统的力度
-        float maxForce = ballData != null ? ballData.maxSpeed * 2f : 20;
-        float force = currentForce * maxForce;
+        // 使用蓄力系统的力度（直接使用蓄力系统计算的力度）
+        float force = currentForce;
         
-        Debug.Log($"PlayerCore: 发射参数 - 方向={direction}, 力度={force:F2}, 最大力度={maxForce}");
+        Debug.Log($"PlayerCore: 发射参数 - 方向={direction}, 力度={force:F2}");
         
         // 发射
         Launch(direction, force);

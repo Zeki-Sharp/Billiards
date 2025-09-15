@@ -8,7 +8,7 @@ public class GameUIPanel : MonoBehaviour
     public Image playerHealthBar;
     
     private EnergySystem energySystem;
-    private PlayerStateMachine playerStateMachine;
+    private PlayerCore playerCore;
     
     void Start()
     {
@@ -19,12 +19,16 @@ public class GameUIPanel : MonoBehaviour
             energySystem.OnEnergyChanged += UpdateEnergyBar;
         }
         
-        // 查找玩家状态机（假设有生命值相关逻辑）
-        playerStateMachine = FindFirstObjectByType<PlayerStateMachine>();
+        // 查找玩家核心组件
+        playerCore = FindFirstObjectByType<PlayerCore>();
+        if (playerCore != null)
+        {
+            playerCore.OnHealthChanged += UpdateHealthBar;
+        }
         
         // 初始化UI
         UpdateEnergyBar(energySystem != null ? energySystem.GetCurrentEnergy() : 100f);
-        UpdateHealthBar(100f); // 假设满血
+        UpdateHealthBar(playerCore != null ? playerCore.GetHealthPercentage() : 1f);
     }
     
     void UpdateEnergyBar(float currentEnergy)
@@ -35,11 +39,11 @@ public class GameUIPanel : MonoBehaviour
         }
     }
     
-    void UpdateHealthBar(float currentHealth)
+    void UpdateHealthBar(float healthPercentage)
     {
         if (playerHealthBar != null)
         {
-            playerHealthBar.fillAmount = currentHealth / 100f; // 假设最大生命值为100
+            playerHealthBar.fillAmount = healthPercentage;
         }
     }
     
@@ -48,6 +52,11 @@ public class GameUIPanel : MonoBehaviour
         if (energySystem != null)
         {
             energySystem.OnEnergyChanged -= UpdateEnergyBar;
+        }
+        
+        if (playerCore != null)
+        {
+            playerCore.OnHealthChanged -= UpdateHealthBar;
         }
     }
 }

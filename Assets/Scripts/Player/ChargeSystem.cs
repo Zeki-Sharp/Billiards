@@ -18,11 +18,11 @@ using UnityEngine;
 public class ChargeSystem : MonoBehaviour
 {
     [Header("蓄力设置")]
-    [SerializeField] private float maxChargingTime = 2f; // 最大蓄力时间
-    [SerializeField] private float chargingSpeed = 1f; // 蓄力速度
-    [SerializeField] private float maxForce = 10f; // 最大力度
-    [SerializeField] private float minForce = 1f; // 最小力度
-    [SerializeField] private bool useCyclingCharge = true; // 是否使用循环蓄力
+    [SerializeField] private float maxChargingTime = 3f; // 最大蓄力时间
+    [SerializeField] private float chargingSpeed = 1f; // 蓄力速度（已弃用，保留兼容性）
+    [SerializeField] private float maxForce = 25f; // 最大力度
+    [SerializeField] private float minForce = 5f; // 最小力度
+    [SerializeField] private bool useCyclingCharge = false; // 是否使用循环蓄力
     [SerializeField] private float cycleSpeed = 3f; // 循环速度
     
     [Header("调试")]
@@ -75,7 +75,7 @@ public class ChargeSystem : MonoBehaviour
         isCharging = true;
         chargingStartTime = Time.time;
         chargingPower = 0f;
-        currentForce = useCyclingCharge ? minForce : 0f;
+        currentForce = minForce;
         
         OnChargingStarted?.Invoke();
         
@@ -150,7 +150,7 @@ public class ChargeSystem : MonoBehaviour
         
         // 计算蓄力进度
         float chargingTime = Time.time - chargingStartTime;
-        chargingPower = Mathf.Clamp01(chargingTime * chargingSpeed / maxChargingTime);
+        chargingPower = Mathf.Clamp01(chargingTime / maxChargingTime);
         
         // 计算当前力度
         CalculateCurrentForce();
@@ -158,6 +158,12 @@ public class ChargeSystem : MonoBehaviour
         // 触发事件
         OnChargingProgressChanged?.Invoke(chargingPower);
         OnForceChanged?.Invoke(currentForce);
+        
+        // 调试信息
+        if (showDebugInfo && Time.frameCount % 30 == 0) // 每30帧打印一次
+        {
+            Debug.Log($"ChargeSystem: 蓄力时间={chargingTime:F2}s, 蓄力进度={chargingPower:F2}, 当前力度={currentForce:F2}, 最小力度={minForce}, 最大力度={maxForce}");
+        }
         
         // 检查是否蓄力完成
         if (chargingPower >= 1f)
