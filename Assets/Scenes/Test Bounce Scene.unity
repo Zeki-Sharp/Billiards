@@ -9971,7 +9971,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxEnergy: 100
   currentEnergy: 100
-  energyRegenRate: 50
+  energyRegenRate: 20
   energyConsumeRate: 40
   energyThreshold: 100
   recoveryEnabled: 1
