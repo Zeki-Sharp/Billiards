@@ -51,6 +51,26 @@ public class AimController : MonoBehaviour
     
     void Update()
     {
+        // 如果PlayerCore还没有找到，尝试再次查找
+        if (playerCore == null)
+        {
+            playerCore = FindAnyObjectByType<PlayerCore>();
+            if (playerCore != null)
+            {
+                Debug.Log("AimController: 在Update中找到PlayerCore，开始初始化");
+                // 设置瞄准线
+                SetupAimLine();
+                
+                // 初始化反射计算器
+                InitializeReflectionCalculator();
+                
+                // 初始化材质控制器
+                InitializeMaterialController();
+                
+                Debug.Log("TestAimController Update初始化完成");
+            }
+        }
+        
         UpdateAimLine();
         UpdateAimDirection();
     }
@@ -65,13 +85,15 @@ public class AimController : MonoBehaviour
             return;
         }
         
-        // 获取玩家核心
+        // 获取玩家核心 - 使用延迟查找
         if (playerCore == null)
         {
             playerCore = FindAnyObjectByType<PlayerCore>();
             if (playerCore == null)
             {
-                Debug.LogError("AimController: 找不到PlayerCore！请设置playerCore引用");
+                Debug.LogWarning("AimController: 当前找不到PlayerCore，将在下一帧重试");
+                // 使用协程延迟查找
+                StartCoroutine(DelayedPlayerCoreSearch());
                 return;
             }
         }
@@ -86,6 +108,41 @@ public class AimController : MonoBehaviour
         InitializeMaterialController();
         
         Debug.Log("TestAimController 初始化完成");
+    }
+    
+    /// <summary>
+    /// 延迟查找PlayerCore的协程
+    /// </summary>
+    System.Collections.IEnumerator DelayedPlayerCoreSearch()
+    {
+        int maxAttempts = 30; // 最多尝试30次（约0.5秒）
+        int attempts = 0;
+        
+        while (playerCore == null && attempts < maxAttempts)
+        {
+            yield return new WaitForEndOfFrame();
+            playerCore = FindAnyObjectByType<PlayerCore>();
+            attempts++;
+        }
+        
+        if (playerCore != null)
+        {
+            Debug.Log("AimController: 延迟查找成功，找到PlayerCore");
+            // 设置瞄准线
+            SetupAimLine();
+            
+            // 初始化反射计算器
+            InitializeReflectionCalculator();
+            
+            // 初始化材质控制器
+            InitializeMaterialController();
+            
+            Debug.Log("TestAimController 延迟初始化完成");
+        }
+        else
+        {
+            Debug.LogError("AimController: 延迟查找失败，无法找到PlayerCore！");
+        }
     }
     
     void SetupAimLine()
