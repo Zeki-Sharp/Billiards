@@ -2,6 +2,23 @@ using UnityEngine;
 
 /// <summary>
 /// 玩家总控制器 - 协调所有玩家组件
+/// 
+/// 【核心职责】：
+/// - 作为Player系统的总协调器和管理器
+/// - 自动初始化和配置所有Player子组件
+/// - 提供统一的对外接口和组件访问
+/// - 处理组件间的事件协调和状态同步
+/// 
+/// 【管理组件】：
+/// - PlayerCore: 核心业务逻辑（物理、蓄力、血量）
+/// - PlayerStateMachine: 玩家状态管理
+/// - PlayerInputHandler: 输入处理
+/// - PlayerMovementController: 移动控制
+/// 
+/// 【设计原则】：
+/// - 使用协调器模式，不直接处理业务逻辑
+/// - 自动组件管理，减少手动配置
+/// - 提供清晰的公共API供外部调用
 /// </summary>
 public class Player : MonoBehaviour
 {

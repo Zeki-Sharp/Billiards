@@ -163,6 +163,23 @@ public class GameInitializer : MonoBehaviour
             gameFlowController.SetTimeStopManager(timeStopManager);
             gameFlowController.SetTransitionManager(transitionManager);
             gameFlowController.SetEnemyManager(enemyManager);
+            
+            // 设置Player相关引用
+            if (player != null)
+            {
+                PlayerStateMachine playerStateMachine = player.GetStateMachine();
+                PlayerCore playerCore = player.GetPlayerCore();
+                
+                if (playerStateMachine != null)
+                {
+                    gameFlowController.SetPlayerStateMachine(playerStateMachine);
+                }
+                
+                if (playerCore != null)
+                {
+                    gameFlowController.SetPlayerCore(playerCore);
+                }
+            }
         }
         
         if (showDebugInfo)

@@ -3,6 +3,17 @@ using UnityEngine.InputSystem;
 
 /// <summary>
 /// 玩家输入处理器 - 统一处理所有玩家输入
+/// 
+/// 【核心职责】：
+/// - 处理WASD移动输入和鼠标攻击输入
+/// - 支持New Input System和Legacy Input Manager
+/// - 根据玩家状态分发输入到相应组件
+/// - 主动通知GameFlowController进行状态切换
+/// 
+/// 【设计原则】：
+/// - 作为输入的统一入口，避免其他组件直接检测输入
+/// - 与PlayerStateMachine协作，确保输入与状态一致
+/// - 通过GameFlowController.RequestChargingState()主动触发游戏状态变化
 /// </summary>
 public class PlayerInputHandler : MonoBehaviour
 {
@@ -14,6 +25,7 @@ public class PlayerInputHandler : MonoBehaviour
     private PlayerStateMachine stateMachine;
     private PlayerMovementController movementController;
     private PlayerCore playerCore;
+    private GameFlowController gameFlowController;
     
     // Input System支持
     private InputAction moveAction;
@@ -33,6 +45,7 @@ public class PlayerInputHandler : MonoBehaviour
         stateMachine = GetComponent<PlayerStateMachine>();
         movementController = GetComponent<PlayerMovementController>();
         playerCore = GetComponent<PlayerCore>();
+        gameFlowController = GameFlowController.Instance;
         
         // 初始化输入系统
         InitializeInputSystem();
@@ -194,14 +207,25 @@ public class PlayerInputHandler : MonoBehaviour
             movementController.HandleMovement(moveInput, isMovePressed);
         }
         
-        // 检测蓄力输入
+        // 检测蓄力输入，主动通知GameFlowController
         if (isAttackPressed)
         {
             if (showDebugInfo)
             {
-                Debug.Log("PlayerInputHandler: 检测到蓄力输入，开始蓄力");
+                Debug.Log("PlayerInputHandler: 检测到蓄力输入，请求进入蓄力状态");
             }
-            stateMachine.StartCharging();
+            
+            // 先通知GameFlowController切换到蓄力状态
+            if (gameFlowController != null)
+            {
+                gameFlowController.RequestChargingState();
+            }
+            
+            // 然后通知PlayerStateMachine开始蓄力
+            if (stateMachine != null)
+            {
+                stateMachine.StartCharging();
+            }
         }
     }
     

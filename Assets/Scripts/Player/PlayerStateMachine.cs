@@ -2,6 +2,22 @@ using UnityEngine;
 
 /// <summary>
 /// 玩家状态机 - 管理玩家的状态转换和逻辑
+/// 
+/// 【核心职责】：
+/// - 管理玩家的三种状态：Idle（空闲）、Charging（蓄力）、Moving（运动）
+/// - 处理状态间的转换逻辑和条件判断
+/// - 协调PlayerCore和AimController的UI显示
+/// - 提供状态查询接口供其他组件使用
+/// 
+/// 【状态定义】：
+/// - Idle: 可以移动和开始蓄力
+/// - Charging: 不能移动，显示瞄准线，更新蓄力进度
+/// - Moving: 物理发射移动中，不能进行任何操作
+/// 
+/// 【设计原则】：
+/// - 单一职责：只管理玩家状态，不处理具体业务逻辑
+/// - 状态驱动：根据当前状态决定允许的操作
+/// - 事件通知：状态变化时通知相关组件
 /// </summary>
 public class PlayerStateMachine : MonoBehaviour
 {
@@ -25,7 +41,6 @@ public class PlayerStateMachine : MonoBehaviour
     // 组件引用
     private PlayerCore playerCore;
     private AimController aimController;
-    private GameFlowController gameFlowController;
     
     // 事件
     public System.Action<PlayerState, PlayerState> OnStateChanged;
@@ -35,7 +50,6 @@ public class PlayerStateMachine : MonoBehaviour
         // 获取组件引用
         playerCore = GetComponent<PlayerCore>();
         aimController = FindFirstObjectByType<AimController>();
-        gameFlowController = GameFlowController.Instance;
         
         // 初始化状态
         currentState = initialState;
@@ -133,12 +147,6 @@ public class PlayerStateMachine : MonoBehaviour
                     playerCore.StartCharging();
                 }
                 
-                // 通知游戏流程控制器
-                if (gameFlowController != null)
-                {
-                    gameFlowController.SwitchToChargingState();
-                }
-                
                 // 显示蓄力UI
                 if (aimController != null)
                 {
@@ -147,11 +155,7 @@ public class PlayerStateMachine : MonoBehaviour
                 break;
             case PlayerState.Moving:
                 // 进入运动状态
-                // 通知游戏流程控制器
-                if (gameFlowController != null)
-                {
-                    gameFlowController.SwitchToTransitionState();
-                }
+                // 状态变化会通过事件通知GameFlowController
                 break;
         }
     }
