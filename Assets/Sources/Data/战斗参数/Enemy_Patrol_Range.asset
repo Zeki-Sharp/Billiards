@@ -10,29 +10,29 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b91ceb5820eeac143bd4453bd0559c61, type: 3}
-  m_Name: Player_Combat
+  m_Name: Enemy_Patrol_Range
   m_EditorClassIdentifier: 
-  maxHealth: 100
-  damage: 50
+  maxHealth: 80
+  damage: 20
   attackCooldown: 2
-  moveSpeed: 2
-  isEnemy: 0
+  moveSpeed: 1.5
+  isEnemy: 1
   microMoveSpeed: 5
-  enableAI: 0
+  enableAI: 1
   aiUpdateInterval: 0.1
-  attackRange: 3
-  attackType: 0
+  attackRange: 5
+  attackType: 1
   movementType: 0
   contactRadius: 1
+  followMinDistance: 2
+  followMaxDistance: 6
+  maintainDistance: 1
   bulletPrefab: {fileID: 0}
-  bulletSpeed: 10
-  bulletDamage: 8
-  bulletLifetime: 3
-  bulletOffset: {x: 0, y: 0}
-  followMinDistance: 1
-  followMaxDistance: 5
-  maintainDistance: 0
+  bulletSpeed: 15
+  bulletDamage: 12
+  bulletLifetime: 2.5
+  bulletOffset: {x: 0, y: 0.5}
   patrolPoints: []
-  waitTimeAtPoint: 1
+  waitTimeAtPoint: 1.5
   loopPatrol: 1
-  patrolSpeedMultiplier: 0.7
+  patrolSpeedMultiplier: 0.6

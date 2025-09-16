@@ -77,10 +77,74 @@ public class Enemy : MonoBehaviour
         // 更新动画（根据设置决定是否应用时间缩放）
         UpdateAnimations(scaledDeltaTime);
         
-        // 敌人AI移动逻辑（根据设置决定是否应用时间缩放）
-        if (enableAI && targetPlayer != null && IsAlive())
+        // 敌人AI逻辑（根据配置化的移动方式）
+        if (ShouldEnableAI() && targetPlayer != null && IsAlive())
         {
-            MoveTowardsPlayer(scaledDeltaTime);
+            ExecuteMovementAI(scaledDeltaTime);
+            ExecuteAttackAI();
+        }
+    }
+    
+    /// <summary>
+    /// 检查是否应该启用AI
+    /// </summary>
+    bool ShouldEnableAI()
+    {
+        // 兼容性检查：优先使用配置化设置
+        if (combatData != null && combatData.isEnemy)
+        {
+            return combatData.enableAI;
+        }
+        // 向后兼容：使用旧设置
+        return enableAI;
+    }
+    
+    /// <summary>
+    /// 执行移动AI
+    /// </summary>
+    void ExecuteMovementAI(float deltaTime)
+    {
+        if (combatData == null || !combatData.isEnemy)
+        {
+            // 向后兼容：使用旧的移动逻辑
+            MoveTowardsPlayer(deltaTime);
+            return;
+        }
+        
+        // 根据配置的移动方式执行不同的移动逻辑
+        switch (combatData.movementType)
+        {
+            case MovementType.FollowPlayer:
+                MoveTowardsPlayer(deltaTime);
+                break;
+            case MovementType.Patrol:
+                // 占位符：巡逻移动
+                ExecutePatrolMovement(deltaTime);
+                break;
+        }
+    }
+    
+    /// <summary>
+    /// 执行攻击AI
+    /// </summary>
+    void ExecuteAttackAI()
+    {
+        if (combatData == null || !combatData.isEnemy)
+        {
+            // 向后兼容：使用旧的攻击逻辑（碰撞时触发）
+            return;
+        }
+        
+        // 根据配置的攻击方式执行不同的攻击逻辑
+        switch (combatData.attackType)
+        {
+            case AttackType.Contact:
+                // 接触攻击在碰撞时触发，这里不需要额外逻辑
+                break;
+            case AttackType.Ranged:
+                // 占位符：远程攻击
+                ExecuteRangedAttack();
+                break;
         }
     }
     
@@ -116,8 +180,32 @@ public class Enemy : MonoBehaviour
     {
         if (targetPlayer == null) return;
         
+        // 获取移动速度（优先使用配置化设置）
+        float currentMoveSpeed = GetMoveSpeed();
+        
         // 计算朝向玩家的方向
         Vector2 direction = (targetPlayer.transform.position - transform.position).normalized;
+        
+        // 检查是否需要保持距离
+        if (combatData != null && combatData.isEnemy && combatData.maintainDistance)
+        {
+            float distance = Vector3.Distance(transform.position, targetPlayer.transform.position);
+            if (distance < combatData.followMinDistance)
+            {
+                // 距离太近，远离目标
+                direction = -direction;
+            }
+            else if (distance > combatData.followMaxDistance)
+            {
+                // 距离太远，接近目标
+                // direction 已经是朝向目标的方向
+            }
+            else
+            {
+                // 在合适距离内，停止移动
+                return;
+            }
+        }
         
         // 根据TimeManager设置决定是否使用缩放时间
         float actualDeltaTime = deltaTime;
@@ -127,11 +215,84 @@ public class Enemy : MonoBehaviour
         }
         
         // 移动敌人
-        transform.Translate(direction * moveSpeed * actualDeltaTime);
+        transform.Translate(direction * currentMoveSpeed * actualDeltaTime);
     }
     
     /// <summary>
-    /// 敌人攻击玩家
+    /// 获取移动速度
+    /// </summary>
+    float GetMoveSpeed()
+    {
+        if (combatData != null && combatData.isEnemy)
+        {
+            return combatData.moveSpeed;
+        }
+        // 向后兼容
+        return moveSpeed;
+    }
+    
+    /// <summary>
+    /// 执行巡逻移动（占位符）
+    /// </summary>
+    void ExecutePatrolMovement(float deltaTime)
+    {
+        // 占位符实现：只打印debug信息
+        Debug.Log($"Enemy {name}: [DEBUG] 执行巡逻移动 - 巡逻点数量: {(combatData.patrolPoints != null ? combatData.patrolPoints.Length : 0)}");
+        Debug.Log($"Enemy {name}: [DEBUG] 巡逻配置 - 等待时间: {combatData.waitTimeAtPoint}, 循环: {combatData.loopPatrol}, 速度倍数: {combatData.patrolSpeedMultiplier}");
+        
+        // TODO: 实现实际的巡逻逻辑
+        // 1. 移动到当前巡逻点
+        // 2. 到达后等待指定时间
+        // 3. 移动到下一个巡逻点
+        // 4. 根据loopPatrol决定是否循环
+    }
+    
+    /// <summary>
+    /// 执行远程攻击（占位符）
+    /// </summary>
+    void ExecuteRangedAttack()
+    {
+        if (targetPlayer == null) return;
+        
+        // 检查攻击冷却
+        float attackInterval = GetAttackInterval();
+        if (Time.time - lastAttackTime < attackInterval)
+        {
+            return;
+        }
+        
+        lastAttackTime = Time.time;
+        
+        // 占位符实现：只打印debug信息
+        Debug.Log($"Enemy {name}: [DEBUG] 执行远程攻击");
+        Debug.Log($"Enemy {name}: [DEBUG] 子弹配置 - 速度: {combatData.bulletSpeed}, 伤害: {combatData.bulletDamage}, 存活时间: {combatData.bulletLifetime}");
+        Debug.Log($"Enemy {name}: [DEBUG] 目标: {targetPlayer.name}, 距离: {Vector3.Distance(transform.position, targetPlayer.transform.position):F2}");
+        
+        // 显示攻击方向
+        Vector3 attackDirection = (targetPlayer.transform.position - transform.position).normalized;
+        Debug.DrawRay(transform.position, attackDirection * combatData.attackRange, Color.red, 0.5f);
+        
+        // TODO: 实现实际的远程攻击逻辑
+        // 1. 创建子弹预制体
+        // 2. 设置子弹位置、方向、速度
+        // 3. 播放发射音效
+    }
+    
+    /// <summary>
+    /// 获取攻击间隔
+    /// </summary>
+    float GetAttackInterval()
+    {
+        if (combatData != null && combatData.isEnemy)
+        {
+            return combatData.attackCooldown;
+        }
+        // 向后兼容
+        return attackInterval;
+    }
+    
+    /// <summary>
+    /// 敌人攻击玩家（接触攻击）
     /// </summary>
     void AttackPlayer()
     {
@@ -142,12 +303,12 @@ public class Enemy : MonoBehaviour
         }
         
         // 检查攻击间隔（根据设置决定是否受时停影响）
-        float actualAttackInterval = attackInterval;
+        float actualAttackInterval = GetAttackInterval();
         if (TimeManager.Instance != null && TimeManager.Instance.ShouldAffectEnemyAttackInterval())
         {
             // 如果攻击间隔受时停影响，需要调整间隔时间
             float timeScale = TimeManager.Instance.GetEnemyTimeScale();
-            actualAttackInterval = attackInterval / timeScale; // 时停时攻击间隔变长
+            actualAttackInterval = actualAttackInterval / timeScale; // 时停时攻击间隔变长
         }
         
         if (Time.time - lastEnemyAttackTime < actualAttackInterval)
@@ -164,7 +325,7 @@ public class Enemy : MonoBehaviour
         Vector3 attackDirection = (targetPlayer.transform.position - transform.position).normalized;
         
         // 获取敌人伤害值
-        float damage = combatData != null ? combatData.damage : 10f;
+        float damage = GetDamage();
         
         Debug.Log($"Enemy {name} 准备攻击玩家 {targetPlayer.name}，伤害: {damage}，攻击位置: {attackPosition}");
         
@@ -172,6 +333,19 @@ public class Enemy : MonoBehaviour
         EventTrigger.Attack("EnemyAttack", attackPosition, attackDirection, gameObject, targetPlayer.gameObject, damage);
         
         Debug.Log($"Enemy {name} 已触发攻击事件");
+    }
+    
+    /// <summary>
+    /// 获取伤害值
+    /// </summary>
+    float GetDamage()
+    {
+        if (combatData != null && combatData.isEnemy)
+        {
+            return combatData.damage;
+        }
+        // 向后兼容
+        return combatData != null ? combatData.damage : 10f;
     }
     
     void OnCollisionEnter2D(Collision2D collision)
