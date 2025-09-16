@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>
-/// 统一的事件触发接口
+/// 简化的事件触发接口
 /// 实现游戏逻辑和表现的桥接机制
 /// </summary>
 public static class EventTrigger
@@ -10,10 +10,10 @@ public static class EventTrigger
     public static System.Action<AttackData> OnAttack; // 攻击逻辑事件
     public static System.Action<DeathData> OnDeath;   // 死亡逻辑事件
     
-    #region 通用攻击方法
+    #region 攻击方法
     
     /// <summary>
-    /// 通用攻击事件 - 触发攻击相关的游戏逻辑和表现
+    /// 基础攻击事件 - 触发攻击相关的游戏逻辑和表现
     /// </summary>
     /// <param name="attackType">攻击类型：Hit, Shoot, Skill, Magic 等</param>
     /// <param name="position">攻击位置</param>
@@ -33,8 +33,8 @@ public static class EventTrigger
             Target = target,
             Damage = damage,
             AttackTime = Time.time,
-            AttackerTag = attacker != null ? attacker.tag : "",
-            TargetTag = target != null ? target.tag : "",
+            AttackerTag = attacker?.tag ?? "",
+            TargetTag = target?.tag ?? "",
             HitNormal = Vector3.zero,
             HitSpeed = 0f,
             WallHitRotationAngle = 0f,
@@ -47,14 +47,15 @@ public static class EventTrigger
         // 触发表现事件
         AttackEffectEvent.Trigger(attackData);
         
+        // 调试日志
         if (Debug.isDebugBuild)
         {
-            Debug.Log($"EventTrigger.Attack: 触发攻击事件 {attackType} -> {attacker?.name} 攻击 {target?.name}, 伤害: {damage}");
+            Debug.Log($"EventTrigger.Attack: {attackType} -> {attacker?.name} 攻击 {target?.name}, 伤害: {damage}");
         }
     }
     
     /// <summary>
-    /// 通用攻击事件 - 带完整参数版本（用于墙壁撞击等复杂攻击）
+    /// 复杂攻击事件 - 带完整参数版本（用于墙壁撞击等复杂攻击）
     /// </summary>
     /// <param name="attackType">攻击类型：Hit, Shoot, Skill, Magic 等</param>
     /// <param name="position">攻击位置</param>
@@ -78,8 +79,8 @@ public static class EventTrigger
             Target = target,
             Damage = damage,
             AttackTime = Time.time,
-            AttackerTag = attacker != null ? attacker.tag : "",
-            TargetTag = target != null ? target.tag : "",
+            AttackerTag = attacker?.tag ?? "",
+            TargetTag = target?.tag ?? "",
             HitNormal = hitNormal,
             HitSpeed = speed,
             WallHitRotationAngle = rotationAngle,
@@ -92,15 +93,46 @@ public static class EventTrigger
         // 触发表现事件
         AttackEffectEvent.Trigger(attackData);
         
+        // 调试日志
         if (Debug.isDebugBuild)
         {
-            Debug.Log($"EventTrigger.Attack: 触发复杂攻击事件 {attackType} -> {attacker?.name} 攻击 {target?.name}, 伤害: {damage}, 速度: {speed}, 旋转角度: {rotationAngle}");
+            Debug.Log($"EventTrigger.Attack: {attackType} -> {attacker?.name} 攻击 {target?.name}, 伤害: {damage}, 速度: {speed}");
         }
     }
     
     #endregion
     
-    #region 特殊特效方法（保留现有方法）
+    #region 死亡方法
+    
+    /// <summary>
+    /// 触发死亡事件 - 触发死亡相关的游戏逻辑和表现
+    /// </summary>
+    public static void Dead(Vector3 position, Vector3 direction, GameObject target)
+    {
+        // 创建死亡数据
+        var deathData = new DeathData
+        {
+            DeathType = "EnemyDeath",
+            Position = position,
+            Direction = direction,
+            DeadObject = target,
+            DeadObjectTag = target?.tag ?? "",
+            DeathTime = Time.time
+        };
+        
+        // 触发游戏逻辑事件
+        OnDeath?.Invoke(deathData);
+        
+        // 触发表现事件
+        DeathEffectEvent.Trigger(deathData);
+        
+        // 调试日志
+        Debug.Log($"EventTrigger.Dead: 触发死亡事件，目标: {target?.name}");
+    }
+    
+    #endregion
+    
+    #region 特效方法
     
     /// <summary>
     /// 触发发射特效
@@ -119,31 +151,6 @@ public static class EventTrigger
     }
     
     /// <summary>
-    /// 触发死亡事件 - 触发死亡相关的游戏逻辑和表现
-    /// </summary>
-    public static void Dead(Vector3 position, Vector3 direction, GameObject target)
-    {
-        // 创建死亡数据
-        var deathData = new DeathData
-        {
-            DeathType = "EnemyDeath",
-            Position = position,
-            Direction = direction,
-            DeadObject = target,
-            DeadObjectTag = target != null ? target.tag : "",
-            DeathTime = Time.time
-        };
-        
-        // 触发游戏逻辑事件
-        OnDeath?.Invoke(deathData);
-        
-        // 触发表现事件
-        DeathEffectEvent.Trigger(deathData);
-        
-        Debug.Log($"EventTrigger.Dead: 触发死亡事件，目标: {target?.name}");
-    }
-    
-    /// <summary>
     /// 触发蓄力开始特效
     /// </summary>
     public static void ChargeStart(Vector3 position, GameObject target)
@@ -152,6 +159,5 @@ public static class EventTrigger
     }
     
     #endregion
-    
 
 }
