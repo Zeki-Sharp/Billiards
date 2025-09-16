@@ -38,6 +38,7 @@ public class PlayerCore : MonoBehaviour
     // 蓄力相关（已移至ChargeSystem）
     
     // 防重复触发机制
+    private GameObject lastAttackedEnemy = null;
     private float lastAttackTime = 0f;
     private const float ATTACK_COOLDOWN = 0.1f; // 0.1秒冷却时间
     
@@ -287,14 +288,16 @@ public class PlayerCore : MonoBehaviour
     /// </summary>
     void AttackEnemy(Collision2D collision)
     {
-        // 防重复触发检查
-        if (Time.time - lastAttackTime < ATTACK_COOLDOWN)
+        // 防重复触发检查 - 只对同一个敌人进行冷却
+        if (lastAttackedEnemy == collision.gameObject && 
+            Time.time - lastAttackTime < ATTACK_COOLDOWN)
         {
-            Debug.Log($"PlayerCore: 攻击冷却中，忽略重复触发");
+            Debug.Log($"PlayerCore: 攻击同一敌人冷却中，忽略重复触发");
             return;
         }
         
-        // 更新最后攻击时间
+        // 更新最后攻击的敌人和时间
+        lastAttackedEnemy = collision.gameObject;
         lastAttackTime = Time.time;
         
         // 获取敌人组件

@@ -73,6 +73,9 @@ public class Enemy : MonoBehaviour
         
         // 初始化巡逻移动
         InitializePatrolMovement();
+        
+        // 播放生成特效
+        PlaySpawnEffect();
     }
     
     void Update()
@@ -603,5 +606,22 @@ public class Enemy : MonoBehaviour
     private bool CanGetBoost()
     {
         return ballPhysics != null && ballPhysics.GetSpeed() > enemyData.ballData.boostSpeedThreshold;
+    }
+    
+    /// <summary>
+    /// 播放敌人生成特效
+    /// </summary>
+    void PlaySpawnEffect()
+    {
+        var effectPlayer = GetComponentInChildren<EffectPlayer>();
+        if (effectPlayer != null)
+        {
+            Debug.Log($"敌人 {name} 播放生成特效 at {transform.position}");
+            effectPlayer.PlayEffect("Enemy Spawn Effect", transform.position);
+        }
+        else
+        {
+            Debug.LogWarning($"敌人 {name} 未找到 EffectPlayer 组件，无法播放生成特效");
+        }
     }
 }

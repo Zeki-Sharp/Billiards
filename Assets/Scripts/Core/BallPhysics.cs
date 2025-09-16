@@ -68,16 +68,34 @@ public class BallPhysics : MonoBehaviour
         ballCollider = GetComponent<CircleCollider2D>();
         if (ballCollider == null)
         {
-            ballCollider = gameObject.AddComponent<CircleCollider2D>();
+            // 检查对象上是否已经有任何Collider2D
+            Collider2D existingCollider = GetComponent<Collider2D>();
+            if (existingCollider == null)
+            {
+                // 如果没有任何碰撞器，才添加CircleCollider2D
+                ballCollider = gameObject.AddComponent<CircleCollider2D>();
+            }
+            else
+            {
+                Debug.LogWarning($"对象 {gameObject.name} 上已存在其他类型的碰撞器 ({existingCollider.GetType().Name})，未添加 CircleCollider2D");
+            }
         }
-        ballCollider.radius = ballData.radius;
-        ballCollider.isTrigger = false;
         
-        // 创建物理材质
-        material = new PhysicsMaterial2D("BallMaterial");
-        material.bounciness = ballData.bounceDamping; // 使用BallData中的反弹系数
-        material.friction = ballData.friction; // 使用BallData中的摩擦系数
-        ballCollider.sharedMaterial = material;
+        // 只有当ballCollider不为null时才设置其属性
+        if (ballCollider != null)
+        {
+            ballCollider.radius = ballData.radius;
+            ballCollider.isTrigger = false;
+        }
+        
+        // 创建物理材质（只有当ballCollider存在时才设置）
+        if (ballCollider != null)
+        {
+            material = new PhysicsMaterial2D("BallMaterial");
+            material.bounciness = ballData.bounceDamping; // 使用BallData中的反弹系数
+            material.friction = ballData.friction; // 使用BallData中的摩擦系数
+            ballCollider.sharedMaterial = material;
+        }
         
         // 初始化动态参数缓存
         lastBounciness = ballData.bounceDamping;

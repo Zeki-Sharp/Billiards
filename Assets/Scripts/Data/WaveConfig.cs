@@ -13,6 +13,10 @@ public class WaveConfig
     [Header("波次设置")]
     public float waveDelay = 0f; // 这一波开始前的延迟（秒）
     public bool waitForPreviousWave = true; // 是否等待上一波敌人全部死亡后再开始这一波
+    
+    [Header("预演设置")]
+    public bool enablePreview = true; // 是否启用预演
+    public float previewDuration = 2f; // 预演持续时间（秒）
 }
 
 [System.Serializable]

@@ -26,6 +26,10 @@ public static class EffectMapping
         {"Shoot Attack Effect", "Shoot Attack Effect"},
         {"Magic Attack Effect", "Magic Attack Effect"},
         
+        // 敌人生成相关特效
+        {"Enemy Spawn Effect", "Enemy Spawn Effect"},
+        {"Enemy Spawn Preview Effect", "Enemy Spawn Preview Effect"},
+        
         // 可以继续添加更多特效映射
         // {"NewEffect", "New Effect MMF Object Name"}
     };
