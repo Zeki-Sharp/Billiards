@@ -77,13 +77,13 @@ public class BallCombatData : ScriptableObject
     [Tooltip("是否保持一定距离")]
     public bool maintainDistance = false;
     
-    [Header("巡逻移动设置（占位符）")]
-    [Tooltip("巡逻点列表")]
-    public Transform[] patrolPoints = new Transform[0];
-    [Tooltip("在巡逻点的等待时间")]
-    public float waitTimeAtPoint = 1f;
-    [Tooltip("是否循环巡逻")]
-    public bool loopPatrol = true;
+    [Header("巡逻移动设置")]
     [Tooltip("巡逻速度倍数")]
     public float patrolSpeedMultiplier = 0.7f;
+    [Tooltip("防卡住检测时间（秒）")]
+    public float stuckDetectionTime = 2f;
+    [Tooltip("反弹角度随机偏移范围（度）")]
+    public float bounceRandomOffset = 5f;
+    [Tooltip("最小移动距离（防卡住检测）")]
+    public float minMoveDistance = 0.5f;
 }

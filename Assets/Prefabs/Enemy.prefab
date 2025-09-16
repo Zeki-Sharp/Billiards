@@ -2616,8 +2616,8 @@ GameObject:
   - component: {fileID: 4015076163512018273}
   - component: {fileID: 8847496780498689127}
   - component: {fileID: 8482626374576382035}
-  - component: {fileID: 1472968936209286652}
   - component: {fileID: 4383696704770730940}
+  - component: {fileID: 549718726474039696}
   m_Layer: 0
   m_Name: Enemy
   m_TagString: Enemy
@@ -2683,23 +2683,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ballData: {fileID: 11400000, guid: d1c30c129175ecf48a42f1070d15a627, type: 2}
---- !u!114 &1472968936209286652
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2956119747917118404}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a305a7c61d6109c4fac540d3b864566a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ballData: {fileID: 11400000, guid: d1c30c129175ecf48a42f1070d15a627, type: 2}
-  combatData: {fileID: 11400000, guid: b7f9d613718332948912f861a84a537c, type: 2}
-  moveSpeed: 1
-  enableAI: 1
-  attackInterval: 1
 --- !u!61 &4383696704770730940
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -2746,6 +2729,23 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1.2737908, y: 1.0902605}
   m_EdgeRadius: 0
+--- !u!114 &549718726474039696
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2956119747917118404}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b174bde790db6bc4f904b94447e341e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ballData: {fileID: 11400000, guid: d1c30c129175ecf48a42f1070d15a627, type: 2}
+  combatData: {fileID: 11400000, guid: 7bdb1f8f32d410a4fb7857b105b27e59, type: 2}
+  moveSpeed: 2
+  enableAI: 1
+  attackInterval: 1
 --- !u!1 &3650335641447170782
 GameObject:
   m_ObjectHideFlags: 0

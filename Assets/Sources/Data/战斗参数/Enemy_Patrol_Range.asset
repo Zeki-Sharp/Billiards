@@ -24,15 +24,15 @@ MonoBehaviour:
   attackType: 1
   movementType: 0
   contactRadius: 1
-  followMinDistance: 2
-  followMaxDistance: 6
-  maintainDistance: 1
   bulletPrefab: {fileID: 0}
   bulletSpeed: 15
   bulletDamage: 12
   bulletLifetime: 2.5
   bulletOffset: {x: 0, y: 0.5}
-  patrolPoints: []
-  waitTimeAtPoint: 1.5
-  loopPatrol: 1
-  patrolSpeedMultiplier: 0.6
+  followMinDistance: 2
+  followMaxDistance: 6
+  maintainDistance: 1
+  patrolSpeedMultiplier: 0.8
+  stuckDetectionTime: 1.5
+  bounceRandomOffset: 8
+  minMoveDistance: 0.3

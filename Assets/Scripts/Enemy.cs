@@ -30,6 +30,13 @@ public class Enemy : MonoBehaviour
     // 攻击间隔控制
     private float lastEnemyAttackTime = 0f;
     
+    // 巡逻移动相关
+    private Vector2 patrolDirection;
+    private Vector2 lastPosition;
+    private float stuckTimer;
+    private float lastMoveTime;
+    private Vector2 stuckCheckPosition; // 开始检查卡住时的位置
+    private float stuckCheckStartTime; // 开始检查卡住时的时间
     
     // 事件
     public System.Action<float> OnHealthChanged;
@@ -66,6 +73,9 @@ public class Enemy : MonoBehaviour
         
         // 初始化动画组件
         InitializeAnimator();
+        
+        // 初始化巡逻移动
+        InitializePatrolMovement();
     }
     
     void Update()
@@ -232,19 +242,129 @@ public class Enemy : MonoBehaviour
     }
     
     /// <summary>
-    /// 执行巡逻移动（占位符）
+    /// 初始化巡逻移动
+    /// </summary>
+    void InitializePatrolMovement()
+    {
+        // 随机选择初始方向
+        float randomAngle = Random.Range(0f, 360f);
+        patrolDirection = new Vector2(Mathf.Cos(randomAngle * Mathf.Deg2Rad), Mathf.Sin(randomAngle * Mathf.Deg2Rad));
+        
+        // 初始化位置记录
+        lastPosition = transform.position;
+        stuckTimer = 0f;
+        lastMoveTime = Time.time;
+        stuckCheckPosition = transform.position;
+        stuckCheckStartTime = Time.time;
+        
+    }
+    
+    /// <summary>
+    /// 执行巡逻移动（反弹巡逻）
     /// </summary>
     void ExecutePatrolMovement(float deltaTime)
     {
-        // 占位符实现：只打印debug信息
-        Debug.Log($"Enemy {name}: [DEBUG] 执行巡逻移动 - 巡逻点数量: {(combatData.patrolPoints != null ? combatData.patrolPoints.Length : 0)}");
-        Debug.Log($"Enemy {name}: [DEBUG] 巡逻配置 - 等待时间: {combatData.waitTimeAtPoint}, 循环: {combatData.loopPatrol}, 速度倍数: {combatData.patrolSpeedMultiplier}");
+        if (combatData == null) return;
         
-        // TODO: 实现实际的巡逻逻辑
-        // 1. 移动到当前巡逻点
-        // 2. 到达后等待指定时间
-        // 3. 移动到下一个巡逻点
-        // 4. 根据loopPatrol决定是否循环
+        // 检查碰撞并处理反弹
+        CheckCollisionAndBounce();
+        
+        // 执行移动
+        float patrolSpeed = GetMoveSpeed() * combatData.patrolSpeedMultiplier;
+        
+        // 根据TimeManager设置决定是否使用缩放时间
+        float actualDeltaTime = deltaTime;
+        if (TimeManager.Instance != null && !TimeManager.Instance.ShouldAffectEnemyMovement())
+        {
+            actualDeltaTime = Time.deltaTime;
+        }
+        
+        Vector2 movement = patrolDirection * patrolSpeed * actualDeltaTime;
+        transform.Translate(movement);
+        
+        // 更新位置记录
+        UpdatePositionTracking();
+        
+        // 检查是否卡住（在移动后检查）
+        if (CheckIfStuck())
+        {
+            // 强制随机方向
+            SetRandomDirection();
+        }
+    }
+    
+    /// <summary>
+    /// 检查是否卡住
+    /// </summary>
+    bool CheckIfStuck()
+    {
+        Vector2 currentPos = transform.position;
+        float totalDistanceMoved = Vector2.Distance(currentPos, stuckCheckPosition);
+        float timeSinceCheckStart = Time.time - stuckCheckStartTime;
+        
+        // 如果移动距离足够，重置检查
+        if (totalDistanceMoved >= combatData.minMoveDistance)
+        {
+            stuckCheckPosition = currentPos;
+            stuckCheckStartTime = Time.time;
+            return false;
+        }
+        
+        // 如果时间超过了检测时间，且移动距离不够，则认为卡住
+        if (timeSinceCheckStart >= combatData.stuckDetectionTime)
+        {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /// <summary>
+    /// 检查碰撞并处理反弹
+    /// </summary>
+    bool CheckCollisionAndBounce()
+    {
+        //使用射线检测前方是否有碰撞
+        float checkDistance = GetMoveSpeed() * combatData.patrolSpeedMultiplier * Time.deltaTime * 2f;
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, patrolDirection, checkDistance);
+        
+        if (hit.collider != null && hit.collider.gameObject != gameObject)
+        {
+            // 计算反弹方向
+            Vector2 reflectDirection = Vector2.Reflect(patrolDirection, hit.normal);
+            
+            // 添加随机偏移
+            float randomOffset = Random.Range(-combatData.bounceRandomOffset, combatData.bounceRandomOffset);
+            float newAngle = Mathf.Atan2(reflectDirection.y, reflectDirection.x) * Mathf.Rad2Deg + randomOffset;
+            patrolDirection = new Vector2(Mathf.Cos(newAngle * Mathf.Deg2Rad), Mathf.Sin(newAngle * Mathf.Deg2Rad));
+            
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /// <summary>
+    /// 设置随机方向
+    /// </summary>
+    void SetRandomDirection()
+    {
+        float randomAngle = Random.Range(0f, 360f);
+        patrolDirection = new Vector2(Mathf.Cos(randomAngle * Mathf.Deg2Rad), Mathf.Sin(randomAngle * Mathf.Deg2Rad));
+        stuckTimer = 0f;
+        lastPosition = transform.position;
+        lastMoveTime = Time.time;
+        stuckCheckPosition = transform.position;
+        stuckCheckStartTime = Time.time;
+    }
+    
+    /// <summary>
+    /// 更新位置跟踪
+    /// </summary>
+    void UpdatePositionTracking()
+    {
+        lastPosition = transform.position;
+        lastMoveTime = Time.time;
     }
     
     /// <summary>

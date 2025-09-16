@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b91ceb5820eeac143bd4453bd0559c61, type: 3}
   m_Name: Enemy_Follow_Contact
   m_EditorClassIdentifier: 
-  maxHealth: 100
+  maxHealth: 50
   damage: 10
   attackCooldown: 2
   moveSpeed: 1
@@ -32,7 +32,7 @@ MonoBehaviour:
   followMinDistance: 1
   followMaxDistance: 5
   maintainDistance: 0
-  patrolPoints: []
-  waitTimeAtPoint: 1
-  loopPatrol: 1
   patrolSpeedMultiplier: 0.7
+  stuckDetectionTime: 2
+  bounceRandomOffset: 5
+  minMoveDistance: 0.5
