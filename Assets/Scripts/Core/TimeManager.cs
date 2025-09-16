@@ -136,6 +136,15 @@ public class TimeManager : MonoBehaviour
     }
     
     /// <summary>
+    /// 获取缩放后的累计时间
+    /// </summary>
+    public float GetScaledTime()
+    {
+        // 简化实现：直接返回Time.time * 时间缩放
+        return Time.time * GetEnemyTimeScale();
+    }
+    
+    /// <summary>
     /// 检查敌人是否应该被时停
     /// </summary>
     public bool IsEnemyTimeStopped()

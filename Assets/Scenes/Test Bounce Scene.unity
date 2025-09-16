@@ -205,17 +205,76 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe803f38571597d4d9f7517dab3e277a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyDataList: []
   enemyParent: {fileID: 0}
   minX: -10
   maxX: 10
   minY: -5
   maxY: 5
-  waveInterval: 10
-  enemiesPerWave: 0300000002000000040000000100000005000000
+  waveConfigs:
+  - waveName: 
+    enemySpawns:
+    - enemyData: {fileID: 11400000, guid: ce82a34099b9d1f4899931eb09ed10ce, type: 2}
+      count: 2
+      spawnDelay: 0
+      spawnInterval: 0
+      useRandomPosition: 1
+      customPosition: {x: 0, y: 0}
+    waveDelay: 0
+    waitForPreviousWave: 0
+  - waveName: 
+    enemySpawns:
+    - enemyData: {fileID: 11400000, guid: ce82a34099b9d1f4899931eb09ed10ce, type: 2}
+      count: 2
+      spawnDelay: 0
+      spawnInterval: 0
+      useRandomPosition: 1
+      customPosition: {x: 0, y: 0}
+    waveDelay: 5
+    waitForPreviousWave: 0
+  - waveName: 
+    enemySpawns:
+    - enemyData: {fileID: 11400000, guid: 8d46072aeaab4c44fab958850bbe7872, type: 2}
+      count: 2
+      spawnDelay: 0
+      spawnInterval: 0
+      useRandomPosition: 1
+      customPosition: {x: 0, y: 0}
+    waveDelay: 5
+    waitForPreviousWave: 0
+  - waveName: 
+    enemySpawns:
+    - enemyData: {fileID: 11400000, guid: ce82a34099b9d1f4899931eb09ed10ce, type: 2}
+      count: 2
+      spawnDelay: 0
+      spawnInterval: 0
+      useRandomPosition: 1
+      customPosition: {x: 0, y: 0}
+    waveDelay: 5
+    waitForPreviousWave: 0
+  - waveName: 
+    enemySpawns:
+    - enemyData: {fileID: 11400000, guid: ce82a34099b9d1f4899931eb09ed10ce, type: 2}
+      count: 2
+      spawnDelay: 0
+      spawnInterval: 0
+      useRandomPosition: 1
+      customPosition: {x: 0, y: 0}
+    waveDelay: 5
+    waitForPreviousWave: 0
+  - waveName: 
+    enemySpawns:
+    - enemyData: {fileID: 11400000, guid: 8d46072aeaab4c44fab958850bbe7872, type: 2}
+      count: 2
+      spawnDelay: 0
+      spawnInterval: 0
+      useRandomPosition: 1
+      customPosition: {x: 0, y: 0}
+    waveDelay: 5
+    waitForPreviousWave: 0
+  globalWaveInterval: 10
   maxWaves: 10
   autoStart: 1
-  loopWaves: 1
+  loopWaves: 0
   spawnKey: 32
   toggleKey: 116
 --- !u!4 &12897491
@@ -226,12 +285,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 12897489}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 6.5168805, y: 4.979571, z: -0.07274454}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 3.0468805, y: 7.419571, z: -0.07274454}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1787785598}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &12911527
 GameObject:
@@ -9870,6 +9929,7 @@ Transform:
   - {fileID: 2021852713}
   - {fileID: 12911529}
   - {fileID: 590523341}
+  - {fileID: 12897491}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1792804301
@@ -11191,4 +11251,3 @@ SceneRoots:
   - {fileID: 1792804304}
   - {fileID: 1736499165}
   - {fileID: 1637308597}
-  - {fileID: 12897491}
