@@ -7,6 +7,15 @@ public class Enemy : MonoBehaviour
     public BallData ballData; // 物理数据
     public BallCombatData combatData; // 战斗数据
     
+    [Header("移动设置")]
+    [Tooltip("敌人移动速度")]
+    public float moveSpeed = 2f;
+    [Tooltip("是否启用AI移动")]
+    public bool enableAI = true;
+    
+    [Header("攻击设置")]
+    [Tooltip("攻击间隔时间（秒）")]
+    public float attackInterval = 1f;
     
     private float currentHealth;
     private Player targetPlayer;
@@ -16,6 +25,9 @@ public class Enemy : MonoBehaviour
     private const float ATTACK_COOLDOWN = 0.1f; // 0.1秒冷却时间
     private BallPhysics ballPhysics;
     private HealthBar healthBar; // 血条组件
+    
+    // 攻击间隔控制
+    private float lastEnemyAttackTime = 0f;
     
     
     // 事件
@@ -50,6 +62,15 @@ public class Enemy : MonoBehaviour
         InitializeHealthBar();
     }
     
+    void Update()
+    {
+        // 敌人AI移动逻辑
+        if (enableAI && targetPlayer != null && IsAlive())
+        {
+            MoveTowardsPlayer();
+        }
+    }
+    
     void OnEnable()
     {
         // 订阅攻击事件
@@ -75,68 +96,75 @@ public class Enemy : MonoBehaviour
         }
     }
     
+    /// <summary>
+    /// 敌人朝向玩家移动
+    /// </summary>
+    void MoveTowardsPlayer()
+    {
+        if (targetPlayer == null) return;
+        
+        // 计算朝向玩家的方向
+        Vector2 direction = (targetPlayer.transform.position - transform.position).normalized;
+        
+        // 移动敌人
+        transform.Translate(direction * moveSpeed * Time.deltaTime);
+    }
+    
+    /// <summary>
+    /// 敌人攻击玩家
+    /// </summary>
+    void AttackPlayer()
+    {
+        if (targetPlayer == null) 
+        {
+            Debug.LogWarning($"Enemy {name}: targetPlayer 为空，无法攻击");
+            return;
+        }
+        
+        // 检查攻击间隔
+        if (Time.time - lastEnemyAttackTime < attackInterval)
+        {
+            Debug.Log($"Enemy {name}: 攻击冷却中，剩余时间: {attackInterval - (Time.time - lastEnemyAttackTime):F2}秒");
+            return;
+        }
+        
+        // 更新攻击时间
+        lastEnemyAttackTime = Time.time;
+        
+        // 计算攻击方向和位置
+        Vector3 attackPosition = (transform.position + targetPlayer.transform.position) * 0.5f;
+        Vector3 attackDirection = (targetPlayer.transform.position - transform.position).normalized;
+        
+        // 获取敌人伤害值
+        float damage = combatData != null ? combatData.damage : 10f;
+        
+        Debug.Log($"Enemy {name} 准备攻击玩家 {targetPlayer.name}，伤害: {damage}，攻击位置: {attackPosition}");
+        
+        // 触发攻击事件
+        EventTrigger.Attack("EnemyAttack", attackPosition, attackDirection, gameObject, targetPlayer.gameObject, damage);
+        
+        Debug.Log($"Enemy {name} 已触发攻击事件");
+    }
+    
     void OnCollisionEnter2D(Collision2D collision)
     {
-        // 被白球撞击时的处理
+        // 与玩家碰撞时的处理（只在Normal和Transition阶段）
         if (collision.gameObject.CompareTag("Player"))
         {
-            Debug.Log($"Enemy {name} 被白球撞击 - 碰撞体: {collision.collider.name}, 时间: {Time.time}");
+            Debug.Log($"Enemy {name} 与玩家碰撞 - 碰撞体: {collision.collider.name}, 时间: {Time.time}");
             
-            // 防重复触发检查
-            if (Time.time - lastAttackTime < ATTACK_COOLDOWN)
-            {
-                Debug.Log($"Enemy {name} 攻击冷却中，忽略重复触发");
-                return;
-            }
-            
-            // 检查当前游戏状态，只有在非敌人阶段时才受伤
+            // 检查游戏状态，只在Normal和Transition阶段处理碰撞
             GameFlowController gameFlowController = GameFlowController.Instance;
-            if (gameFlowController != null && gameFlowController.IsNormalState)
+            if (gameFlowController != null && 
+                (gameFlowController.IsNormalState || gameFlowController.IsTransitionState))
             {
-                Debug.Log($"Enemy {name} 在正常状态，不受伤");
-                return;
+                // Normal和Transition状态：敌人攻击玩家
+                AttackPlayer();
             }
-            
-            // 更新最后攻击时间
-            lastAttackTime = Time.time;
-            
-            // 计算伤害和碰撞信息
-            // 白球攻击敌人，应该使用白球的伤害值
-            Player player = collision.gameObject.GetComponent<Player>();
-            float damage = player != null && player.combatData != null ? player.combatData.damage : 50f;
-            Vector3 hitPosition = (transform.position + collision.transform.position) * 0.5f;
-            Vector3 hitDirection = (transform.position - collision.transform.position).normalized;
-            
-            Debug.Log($"Enemy {name} 被玩家攻击，玩家伤害: {damage}, 碰撞体: {collision.collider.name}");
-            
-            // 触发攻击事件，伤害处理由事件监听器处理
-            EventTrigger.Attack("Hit", hitPosition, hitDirection, collision.gameObject, gameObject, damage);
-            
-            // 获取玩家的 BallPhysics 组件
-            PlayerCore playerCore = player.GetPlayerCore();
-            if (playerCore != null)
+            else
             {
-                BallPhysics playerPhysics = playerCore.GetComponent<BallPhysics>();
-                if (playerPhysics != null)
-                {
-                    // 检查是否还能获得充能力（基于速度）
-                    if (CanGetBoost())
-                    {
-                        // 计算碰撞方向
-                        Vector2 collisionDirection = (transform.position - collision.transform.position).normalized;
-                        
-                        // 给双方都添加充能力
-                        Vector2 boostForce = collisionDirection * ballData.hitBoostForce * ballData.hitBoostMultiplier;
-                        
-                        // 给敌人添加充能力
-                        ballPhysics.ApplyForce(boostForce);
-                        
-                        // 给玩家添加充能力
-                        playerPhysics.ApplyForce(-boostForce);
-                    }
-                }
+                Debug.Log($"Enemy {name} 在Charging阶段，不处理碰撞（由PlayerCore处理）");
             }
-            
         }
         
         // 撞墙时的处理
@@ -152,9 +180,9 @@ public class Enemy : MonoBehaviour
                 Vector2 wallBoostForce = wallDirection * ballData.hitBoostForce * ballData.hitBoostMultiplier;
                 ballPhysics.ApplyForce(wallBoostForce);
             }
-            
         }
     }
+    
     
     public void TakeDamage(float damage)
     {
@@ -213,7 +241,7 @@ public class Enemy : MonoBehaviour
     }
     
     /// <summary>
-    /// 处理攻击事件（C# Action 实现）
+    /// 处理攻击事件
     /// 当自己是攻击目标时处理伤害
     /// </summary>
     private void HandleAttack(AttackData attackData)

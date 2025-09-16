@@ -2697,6 +2697,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ballData: {fileID: 11400000, guid: d1c30c129175ecf48a42f1070d15a627, type: 2}
   combatData: {fileID: 11400000, guid: b7f9d613718332948912f861a84a537c, type: 2}
+  moveSpeed: 1
+  enableAI: 1
+  attackInterval: 1
 --- !u!61 &4383696704770730940
 BoxCollider2D:
   m_ObjectHideFlags: 0

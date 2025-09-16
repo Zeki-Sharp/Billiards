@@ -25,7 +25,6 @@ public class EnemySpawner : MonoBehaviour
     
     private List<Enemy> spawnedEnemies = new List<Enemy>(); // 已生成的敌人列表
     private Player targetPlayer;
-    private EnemyController enemyController;
     
     // 生成点状态
     private List<GameObject> currentSpawnPoints = new List<GameObject>(); // 当前生成点列表
@@ -35,7 +34,6 @@ public class EnemySpawner : MonoBehaviour
     void Start()
     {
         targetPlayer = FindAnyObjectByType<Player>();
-        enemyController = FindAnyObjectByType<EnemyController>();
         
         if (enemyPrefab == null)
         {
@@ -159,12 +157,7 @@ public class EnemySpawner : MonoBehaviour
         }
         currentSpawnPoints.Clear();
         hasSpawnPoints = false;
-        
-        // 通知EnemyController刷新敌人列表
-        if (enemyController != null)
-        {
-            enemyController.RefreshEnemies();
-        }
+    
         
         int currentWaveEnemies = enemiesPerWave[currentWave - 1];
         Debug.Log($"第{currentWave}波：生成了{currentWaveEnemies}个敌人，当前敌人数量: {spawnedEnemies.Count}");

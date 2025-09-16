@@ -35,6 +35,10 @@ public class PlayerCore : MonoBehaviour
     
     // 蓄力相关（已移至ChargeSystem）
     
+    // 防重复触发机制
+    private float lastAttackTime = 0f;
+    private const float ATTACK_COOLDOWN = 0.1f; // 0.1秒冷却时间
+    
     // 事件
     public System.Action OnBallStopped;
     public System.Action<float> OnHealthChanged;
@@ -237,37 +241,20 @@ public class PlayerCore : MonoBehaviour
     
     void OnCollisionEnter2D(Collision2D collision)
     {
-        // 撞击敌人时的处理
+        // 撞击敌人时的处理（只在Charging阶段）
         if (collision.gameObject.CompareTag("Enemy"))
         {
-            // 获取敌人的 BallPhysics 组件
-            BallPhysics enemyBallPhysics = collision.gameObject.GetComponent<BallPhysics>();
-            if (enemyBallPhysics != null)
+            // 检查游戏状态，只在Charging阶段处理碰撞
+            GameFlowController gameFlowController = GameFlowController.Instance;
+            if (gameFlowController != null && gameFlowController.IsChargingState)
             {
-                // 检查是否还能获得充能力（基于速度）
-                if (CanGetBoost())
-                {
-                    // 计算碰撞方向
-                    Vector2 collisionDirection = (transform.position - collision.transform.position).normalized;
-                    
-                    // 给双方都添加充能力
-                    Vector2 boostForce = collisionDirection * ballData.hitBoostForce * ballData.hitBoostMultiplier;
-                    
-                    // 给白球添加充能力
-                    ballPhysics.ApplyForce(boostForce);
-                    
-                    // 给敌人添加充能力
-                    enemyBallPhysics.ApplyForce(-boostForce);
-                    
-                    Debug.Log($"PlayerCore: 白球碰撞充能 - 白球获得力 {boostForce}，敌人获得力 {-boostForce} (速度:{ballPhysics.GetSpeed():F2})");
-                }
-                else
-                {
-                    Debug.Log($"PlayerCore: 白球碰撞敌人 - 速度过低({ballPhysics.GetSpeed():F2}<{ballData.boostSpeedThreshold})，无充能力");
-                }
+                // Charging状态：玩家攻击敌人
+                AttackEnemy(collision);
             }
-            
-            // 攻击事件和伤害处理由 Enemy.OnCollisionEnter2D 统一处理
+            else
+            {
+                Debug.Log($"PlayerCore: 在Normal/Transition阶段，不处理碰撞（由Enemy处理）");
+            }
         }
         
         // 撞击边界时的处理
@@ -293,6 +280,63 @@ public class PlayerCore : MonoBehaviour
     }
     
     /// <summary>
+    /// 玩家攻击敌人的逻辑（Charging阶段）
+    /// </summary>
+    void AttackEnemy(Collision2D collision)
+    {
+        // 防重复触发检查
+        if (Time.time - lastAttackTime < ATTACK_COOLDOWN)
+        {
+            Debug.Log($"PlayerCore: 攻击冷却中，忽略重复触发");
+            return;
+        }
+        
+        // 更新最后攻击时间
+        lastAttackTime = Time.time;
+        
+        // 获取敌人组件
+        Enemy enemy = collision.gameObject.GetComponent<Enemy>();
+        if (enemy == null) return;
+        
+        // 计算伤害和碰撞信息
+        float damage = combatData != null ? combatData.damage : 50f;
+        Vector3 hitPosition = (transform.position + collision.transform.position) * 0.5f;
+        Vector3 hitDirection = (collision.transform.position - transform.position).normalized;
+        
+        Debug.Log($"PlayerCore: 攻击敌人 {enemy.name}，伤害: {damage}");
+        
+        // 触发攻击事件，伤害处理由事件监听器处理
+        EventTrigger.Attack("Hit", hitPosition, hitDirection, gameObject, collision.gameObject, damage);
+        
+        // 处理充能力逻辑
+        BallPhysics enemyBallPhysics = collision.gameObject.GetComponent<BallPhysics>();
+        if (enemyBallPhysics != null)
+        {
+            // 检查是否还能获得充能力（基于速度）
+            if (CanGetBoost())
+            {
+                // 计算碰撞方向
+                Vector2 collisionDirection = (transform.position - collision.transform.position).normalized;
+                
+                // 给双方都添加充能力
+                Vector2 boostForce = collisionDirection * ballData.hitBoostForce * ballData.hitBoostMultiplier;
+                
+                // 给白球添加充能力
+                ballPhysics.ApplyForce(boostForce);
+                
+                // 给敌人添加充能力
+                enemyBallPhysics.ApplyForce(-boostForce);
+                
+                Debug.Log($"PlayerCore: 白球碰撞充能 - 白球获得力 {boostForce}，敌人获得力 {-boostForce} (速度:{ballPhysics.GetSpeed():F2})");
+            }
+            else
+            {
+                Debug.Log($"PlayerCore: 白球碰撞敌人 - 速度过低({ballPhysics.GetSpeed():F2}<{ballData.boostSpeedThreshold})，无充能力");
+            }
+        }
+    }
+    
+    /// <summary>
     /// 检查是否还能获得充能力（基于速度）
     /// </summary>
     bool CanGetBoost()
@@ -309,11 +353,19 @@ public class PlayerCore : MonoBehaviour
     /// </summary>
     public void TakeDamage(float damage)
     {
-        float currentHealth = combatData != null ? combatData.currentHealth : 100f;
-        currentHealth -= damage;
-        currentHealth = Mathf.Max(0, currentHealth);
+        if (combatData == null)
+        {
+            Debug.LogError("PlayerCore: combatData 为空，无法处理伤害！");
+            return;
+        }
         
-        float maxHealth = combatData != null ? combatData.maxHealth : 100f;
+        // 更新血量数据
+        combatData.currentHealth -= damage;
+        combatData.currentHealth = Mathf.Max(0, combatData.currentHealth);
+        
+        float currentHealth = combatData.currentHealth;
+        float maxHealth = combatData.maxHealth;
+        
         Debug.Log($"PlayerCore: 受到伤害: {damage}, 当前血量: {currentHealth}/{maxHealth}");
         
         // 更新血条
@@ -384,13 +436,19 @@ public class PlayerCore : MonoBehaviour
     /// </summary>
     private void HandleAttack(AttackData attackData)
     {
+        Debug.Log($"PlayerCore: 收到攻击事件 - 攻击者: {attackData.Attacker?.name}, 目标: {attackData.Target?.name}, 伤害: {attackData.Damage}, 攻击类型: {attackData.AttackType}");
+        
         // 检查自己是否是攻击目标
         if (attackData.Target == gameObject && attackData.Damage > 0f)
         {
-            Debug.Log($"PlayerCore: 收到攻击事件，伤害: {attackData.Damage}");
+            Debug.Log($"PlayerCore: 自己是攻击目标，处理伤害: {attackData.Damage}");
             
             // 处理伤害
             TakeDamage(attackData.Damage);
+        }
+        else
+        {
+            Debug.Log($"PlayerCore: 不是攻击目标或伤害为0，忽略攻击事件");
         }
     }
     

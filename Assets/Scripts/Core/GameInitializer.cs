@@ -24,7 +24,6 @@ public class GameInitializer : MonoBehaviour
     // 游戏对象引用
     private Player player;
     private Enemy[] enemies;
-    private EnemyController enemyController;
     private HoleManager holeManager;
     private EnemySpawner enemySpawner;
     
@@ -117,13 +116,6 @@ public class GameInitializer : MonoBehaviour
             Debug.LogWarning("GameInitializer: 未找到任何敌人！");
         }
         
-        // 查找敌人控制器
-        enemyController = FindAnyObjectByType<EnemyController>();
-        if (enemyController == null)
-        {
-            Debug.LogWarning("GameInitializer: 未找到EnemyController！");
-        }
-        
         // 查找HoleManager
         holeManager = FindAnyObjectByType<HoleManager>();
         if (holeManager == null)
@@ -140,7 +132,7 @@ public class GameInitializer : MonoBehaviour
         
         if (showDebugInfo)
         {
-            Debug.Log($"GameInitializer: 游戏对象查找完成 - 白球: {player != null}, 敌人: {enemies.Length}, 敌人控制器: {enemyController != null}");
+            Debug.Log($"GameInitializer: 游戏对象查找完成 - 白球: {player != null}, 敌人: {enemies.Length}");
         }
     }
     
@@ -245,15 +237,6 @@ public class GameInitializer : MonoBehaviour
             }
         }
         
-        // 订阅敌人控制器事件
-        if (enemyController != null)
-        {
-            enemyController.OnEnemyPhaseComplete += OnEnemyPhaseComplete;
-            if (showDebugInfo)
-            {
-                Debug.Log("GameInitializer: 订阅敌人控制器事件");
-            }
-        }
         
         // 订阅HoleManager事件
         if (holeManager != null)
@@ -279,16 +262,6 @@ public class GameInitializer : MonoBehaviour
             if (showDebugInfo)
             {
                 Debug.Log("GameInitializer: 生成第一波敌人生成点");
-            }
-        }
-        
-        // 显示敌人攻击范围预览
-        if (enemyController != null)
-        {
-            enemyController.ShowEnemyPreview();
-            if (showDebugInfo)
-            {
-                Debug.Log("GameInitializer: 显示敌人攻击范围预览");
             }
         }
         
