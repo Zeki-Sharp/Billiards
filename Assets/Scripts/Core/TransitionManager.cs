@@ -55,9 +55,15 @@ public class TransitionManager : MonoBehaviour
         transitionTimer = 0f;
         OnTransitionEnd?.Invoke();
         
+        // 直接通知GameFlowController切换到Normal状态
+        if (GameFlowController.Instance != null)
+        {
+            GameFlowController.Instance.SwitchToNormalState();
+        }
+        
         if (showDebugInfo)
         {
-            Debug.Log("TransitionManager: 过渡结束");
+            Debug.Log("TransitionManager: 过渡结束，切换到Normal状态");
         }
     }
     

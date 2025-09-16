@@ -103,10 +103,6 @@ public class TimeManager : MonoBehaviour
         
         float timeScale = shouldSlowDown ? enemyTimeScale : 1f;
         
-        if (showDebugInfo && shouldSlowDown)
-        {
-            Debug.Log($"TimeManager: 敌人时间缩放 = {timeScale} (状态: {gameFlowController.CurrentState})");
-        }
         
         return timeScale;
     }
@@ -151,14 +147,13 @@ public class TimeManager : MonoBehaviour
     {
         if (gameFlowController == null) return false;
         
-        if (gameFlowController.IsChargingState && enableEnemyTimeStopInCharging)
-            return true;
-        if (gameFlowController.IsTransitionState && enableEnemyTimeStopInTransition)
-            return true;
-        if (gameFlowController.IsNormalState && enableEnemyTimeStopInNormal)
-            return true;
-            
-        return false;
+        bool chargingStop = gameFlowController.IsChargingState && enableEnemyTimeStopInCharging;
+        bool transitionStop = gameFlowController.IsTransitionState && enableEnemyTimeStopInTransition;
+        bool normalStop = gameFlowController.IsNormalState && enableEnemyTimeStopInNormal;
+        
+        bool result = chargingStop || transitionStop || normalStop;
+        
+        return result;
     }
     
     /// <summary>
@@ -166,7 +161,10 @@ public class TimeManager : MonoBehaviour
     /// </summary>
     public bool ShouldAffectEnemyMovement()
     {
-        return affectEnemyMovement && IsEnemyTimeStopped();
+        bool isTimeStopped = IsEnemyTimeStopped();
+        bool result = affectEnemyMovement && isTimeStopped;
+        
+        return result;
     }
     
     /// <summary>

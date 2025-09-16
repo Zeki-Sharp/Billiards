@@ -41,10 +41,6 @@ public class PlayerMovementController : MonoBehaviour
         playerCore = GetComponent<PlayerCore>();
         gameFlowController = GameFlowController.Instance;
         
-        if (showDebugInfo)
-        {
-            Debug.Log("PlayerMovementController: 初始化完成");
-        }
     }
     
     #region 移动处理
@@ -82,19 +78,13 @@ public class PlayerMovementController : MonoBehaviour
         // 检查游戏状态
         if (gameFlowController == null)
         {
-            if (showDebugInfo)
-            {
-                Debug.LogWarning("PlayerMovementController: GameFlowController实例为空！");
-            }
+            Debug.LogWarning("PlayerMovementController: GameFlowController实例为空！");
             return false;
         }
         
-        if (!gameFlowController.IsNormalState)
+        // 允许在Normal和Transition状态下移动
+        if (!gameFlowController.IsNormalState && !gameFlowController.IsTransitionState)
         {
-            if (showDebugInfo)
-            {
-                Debug.Log($"PlayerMovementController: 当前状态不是Normal，无法移动。当前状态: {gameFlowController.CurrentState}");
-            }
             return false;
         }
         

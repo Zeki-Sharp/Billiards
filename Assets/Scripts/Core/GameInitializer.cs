@@ -217,19 +217,19 @@ public class GameInitializer : MonoBehaviour
     void SubscribeToEvents()
     {
         // 订阅玩家事件
-        if (player != null)
-        {
-            // 订阅玩家停止事件
-            PlayerCore playerCore = player.GetPlayerCore();
-            if (playerCore != null)
-            {
-                playerCore.OnBallStopped += OnPlayerStopped;
-            }
-            if (showDebugInfo)
-            {
-                Debug.Log("GameInitializer: 订阅玩家事件");
-            }
-        }
+        // if (player != null)
+        // {
+        //     // 订阅玩家停止事件
+        //     PlayerCore playerCore = player.GetPlayerCore();
+        //     if (playerCore != null)
+        //     {
+        //         playerCore.OnBallStopped += OnPlayerStopped;
+        //     }
+        //     if (showDebugInfo)
+        //     {
+        //         Debug.Log("GameInitializer: 订阅玩家事件");
+        //     }
+        // }
         
         
         // // 订阅HoleManager事件
@@ -274,19 +274,19 @@ public class GameInitializer : MonoBehaviour
     
     #region 事件处理
     
-    void OnPlayerStopped()
-    {
-        if (showDebugInfo)
-        {
-            //Debug.Log("GameInitializer: 玩家停止事件");
-        }
+    // void OnPlayerStopped()
+    // {
+    //     if (showDebugInfo)
+    //     {
+    //         //Debug.Log("GameInitializer: 玩家停止事件");
+    //     }
         
-        // 将事件传递给GameFlowController处理
-        if (gameFlowController != null)
-        {
-            gameFlowController.OnPlayerStopped();
-        }
-    }
+    //     // 将事件传递给GameFlowController处理
+    //     if (gameFlowController != null)
+    //     {
+    //         gameFlowController.OnPlayerStopped();
+    //     }
+    // }
     
     void OnEnemyPhaseComplete()
     {

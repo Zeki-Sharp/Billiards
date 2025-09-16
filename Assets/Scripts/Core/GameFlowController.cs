@@ -125,10 +125,6 @@ public class GameFlowController : MonoBehaviour
         // 触发状态变化事件
         OnStateChanged?.Invoke(currentState);
         
-        if (showDebugInfo)
-        {
-            Debug.Log($"GameFlowController: 切换到正常状态 ({oldState} -> {currentState})");
-        }
     }
     
     public void SwitchToChargingState()
@@ -148,10 +144,6 @@ public class GameFlowController : MonoBehaviour
         // 触发状态变化事件
         OnStateChanged?.Invoke(currentState);
         
-        if (showDebugInfo)
-        {
-            Debug.Log($"GameFlowController: 切换到蓄力状态 ({oldState} -> {currentState})");
-        }
     }
     
     public void SwitchToTransitionState()
@@ -176,10 +168,6 @@ public class GameFlowController : MonoBehaviour
         // 触发状态变化事件
         OnStateChanged?.Invoke(currentState);
         
-        if (showDebugInfo)
-        {
-            Debug.Log($"GameFlowController: 切换到过渡状态 ({oldState} -> {currentState})");
-        }
     }
     
     #endregion
@@ -220,8 +208,12 @@ public class GameFlowController : MonoBehaviour
     /// </summary>
     bool CanEnterTransitionState()
     {
+        // 只有在Charging状态下才能进入Transition
+        if (currentState != GameFlowState.Charging)
+        {
+            return false;
+        }
         
-        Debug.Log("GameFlowController: 可以进入过渡状态");
         return true;
     }
     
@@ -230,24 +222,18 @@ public class GameFlowController : MonoBehaviour
     /// </summary>
     bool CanReturnToNormalState()
     {
+        // 只在Transition状态下检查
+        if (currentState != GameFlowState.Transition)
+        {
+            return false;
+        }
+        
         // 检查过渡是否完成
         if (transitionManager != null && !transitionManager.IsTransitioning())
         {
             return true;
         }
         
-        // 检查玩家是否停止物理移动
-        if (playerCore != null && !playerCore.IsPhysicsMoving())
-        {
-            return true;
-        }
-        
-        // 检查超时
-        if (enableAutoTransition && transitionTimeout > 0)
-        {
-            // 这里需要实现超时逻辑
-            return false;
-        }
         
         return false;
     }
@@ -303,10 +289,6 @@ public class GameFlowController : MonoBehaviour
         
         hasPlayerLaunched = true;
         
-        if (showDebugInfo)
-        {
-            Debug.Log("GameFlowController: 发射白球");
-        }
     }
     
     public void StartNormalState()
@@ -319,18 +301,7 @@ public class GameFlowController : MonoBehaviour
     #endregion
     
     #region 事件处理
-    
-    public void OnPlayerStopped()
-    {
-        if (currentState == GameFlowState.Transition)
-        {
-            // 白球停止，结束过渡状态
-            if (transitionManager != null)
-            {
-                transitionManager.EndTransition();
-            }
-        }
-    }
+
     
     public void OnEnemyPhaseComplete()
     {

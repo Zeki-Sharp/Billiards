@@ -29,6 +29,9 @@ public class Enemy : MonoBehaviour
     // 事件
     public System.Action<float> OnHealthChanged;
     
+    // 调试信息
+    [SerializeField] private bool showDebugInfo = false;
+    
     void Start()
     {
         // 检查配置数据
@@ -192,10 +195,12 @@ public class Enemy : MonoBehaviour
         
         // 根据TimeManager设置决定是否使用缩放时间
         float actualDeltaTime = deltaTime;
-        if (TimeManager.Instance != null && !TimeManager.Instance.ShouldAffectEnemyMovement())
+        bool shouldAffect = TimeManager.Instance != null && TimeManager.Instance.ShouldAffectEnemyMovement();
+        if (!shouldAffect)
         {
             actualDeltaTime = Time.deltaTime; // 使用正常时间
         }
+        
         
         // 移动敌人
         transform.Translate(direction * currentMoveSpeed * actualDeltaTime);
@@ -220,9 +225,10 @@ public class Enemy : MonoBehaviour
         
         // 初始化位置记录
         lastPosition = transform.position;
-        lastMoveTime = Time.time;
+        float currentTime = TimeManager.Instance != null ? TimeManager.Instance.GetScaledTime() : Time.time;
+        lastMoveTime = currentTime;
         stuckCheckPosition = transform.position;
-        stuckCheckStartTime = Time.time;
+        stuckCheckStartTime = currentTime;
         
     }
     
@@ -266,13 +272,14 @@ public class Enemy : MonoBehaviour
     {
         Vector2 currentPos = transform.position;
         float totalDistanceMoved = Vector2.Distance(currentPos, stuckCheckPosition);
-        float timeSinceCheckStart = Time.time - stuckCheckStartTime;
+        float currentTime = TimeManager.Instance != null ? TimeManager.Instance.GetScaledTime() : Time.time;
+        float timeSinceCheckStart = currentTime - stuckCheckStartTime;
         
         // 如果移动距离足够，重置检查
         if (totalDistanceMoved >= enemyData.minMoveDistance)
         {
             stuckCheckPosition = currentPos;
-            stuckCheckStartTime = Time.time;
+            stuckCheckStartTime = currentTime;
             return false;
         }
         
@@ -291,7 +298,8 @@ public class Enemy : MonoBehaviour
     bool CheckCollisionAndBounce()
     {
         //使用射线检测前方是否有碰撞
-        float checkDistance = GetMoveSpeed() * enemyData.patrolSpeedMultiplier * Time.deltaTime * 2f;
+        float deltaTime = TimeManager.Instance != null ? TimeManager.Instance.GetEnemyDeltaTime() : Time.deltaTime;
+        float checkDistance = GetMoveSpeed() * enemyData.patrolSpeedMultiplier * deltaTime * 2f;
         RaycastHit2D hit = Physics2D.Raycast(transform.position, patrolDirection, checkDistance);
         
         if (hit.collider != null && hit.collider.gameObject != gameObject)
@@ -318,9 +326,10 @@ public class Enemy : MonoBehaviour
         float randomAngle = Random.Range(0f, 360f);
         patrolDirection = new Vector2(Mathf.Cos(randomAngle * Mathf.Deg2Rad), Mathf.Sin(randomAngle * Mathf.Deg2Rad));
         lastPosition = transform.position;
-        lastMoveTime = Time.time;
+        float currentTime = TimeManager.Instance != null ? TimeManager.Instance.GetScaledTime() : Time.time;
+        lastMoveTime = currentTime;
         stuckCheckPosition = transform.position;
-        stuckCheckStartTime = Time.time;
+        stuckCheckStartTime = currentTime;
     }
     
     /// <summary>
@@ -329,7 +338,8 @@ public class Enemy : MonoBehaviour
     void UpdatePositionTracking()
     {
         lastPosition = transform.position;
-        lastMoveTime = Time.time;
+        float currentTime = TimeManager.Instance != null ? TimeManager.Instance.GetScaledTime() : Time.time;
+        lastMoveTime = currentTime;
     }
     
     /// <summary>
@@ -341,17 +351,15 @@ public class Enemy : MonoBehaviour
         
         // 检查攻击冷却
         float attackInterval = GetAttackInterval();
-        if (Time.time - lastAttackTime < attackInterval)
+        float currentTime = TimeManager.Instance != null ? TimeManager.Instance.GetScaledTime() : Time.time;
+        if (currentTime - lastAttackTime < attackInterval)
         {
             return;
         }
         
-        lastAttackTime = Time.time;
+        lastAttackTime = currentTime;
         
-        // 占位符实现：只打印debug信息
-        Debug.Log($"Enemy {name}: [DEBUG] 执行远程攻击");
-        Debug.Log($"Enemy {name}: [DEBUG] 子弹配置 - 速度: {enemyData.bulletSpeed}, 伤害: {enemyData.bulletDamage}, 存活时间: {enemyData.bulletLifetime}");
-        Debug.Log($"Enemy {name}: [DEBUG] 目标: {targetPlayer.name}, 距离: {Vector3.Distance(transform.position, targetPlayer.transform.position):F2}");
+        // 占位符实现：远程攻击功能待实现
         
         // 显示攻击方向
         Vector3 attackDirection = (targetPlayer.transform.position - transform.position).normalized;
@@ -391,14 +399,14 @@ public class Enemy : MonoBehaviour
             actualAttackInterval = actualAttackInterval / timeScale; // 时停时攻击间隔变长
         }
         
-        if (Time.time - lastEnemyAttackTime < actualAttackInterval)
+        float currentTime = TimeManager.Instance != null ? TimeManager.Instance.GetScaledTime() : Time.time;
+        if (currentTime - lastEnemyAttackTime < actualAttackInterval)
         {
-            Debug.Log($"Enemy {name}: 攻击冷却中，剩余时间: {actualAttackInterval - (Time.time - lastEnemyAttackTime):F2}秒");
             return;
         }
         
         // 更新攻击时间
-        lastEnemyAttackTime = Time.time;
+        lastEnemyAttackTime = currentTime;
         
         // 计算攻击方向和位置
         Vector3 attackPosition = (transform.position + targetPlayer.transform.position) * 0.5f;
@@ -428,8 +436,6 @@ public class Enemy : MonoBehaviour
         // 与玩家碰撞时的处理（只在Normal和Transition阶段）
         if (collision.gameObject.CompareTag("Player"))
         {
-            Debug.Log($"Enemy {name} 与玩家碰撞 - 碰撞体: {collision.collider.name}, 时间: {Time.time}");
-            
             // 检查游戏状态，只在Normal和Transition阶段处理碰撞
             GameFlowController gameFlowController = GameFlowController.Instance;
             if (gameFlowController != null && 
