@@ -23,12 +23,12 @@ using UnityEngine;
 public class PlayerMovementController : MonoBehaviour
 {
     [Header("移动设置")]
-    [SerializeField] private float microMoveMaxSpeed = 2f;
     [SerializeField] private bool showDebugInfo = true;
     
     // 组件引用
     private PlayerCore playerCore;
     private GameFlowController gameFlowController;
+    private PlayerData playerData;
     
     // 移动状态
     private bool isMicroMoving = false;
@@ -41,6 +41,11 @@ public class PlayerMovementController : MonoBehaviour
         playerCore = GetComponent<PlayerCore>();
         gameFlowController = GameFlowController.Instance;
         
+        // 获取PlayerData引用
+        if (playerCore != null)
+        {
+            playerData = playerCore.playerData;
+        }
     }
     
     #region 移动处理
@@ -98,13 +103,22 @@ public class PlayerMovementController : MonoBehaviour
     {
         if (playerCore == null) return;
         
+        // 从PlayerData获取微操速度
+        float microMoveSpeed = playerData != null ? playerData.microMoveSpeed : 5f;
+        
         // 直接计算目标速度
-        Vector2 targetVelocity = direction * microMoveMaxSpeed;
+        Vector2 targetVelocity = direction * microMoveSpeed;
         
         // 检查方向是否改变，或者当前速度与目标速度差距较大
         Vector2 currentVelocity = playerCore.GetVelocity();
         bool directionChanged = Vector2.Distance(direction, lastInputDirection) > 0.1f;
         bool speedChanged = Vector2.Distance(currentVelocity, targetVelocity) > 0.5f;
+        
+        // 调试信息
+        if (showDebugInfo)
+        {
+            Debug.Log($"PlayerMovementController: microMoveSpeed={microMoveSpeed}, targetVelocity={targetVelocity}, currentVelocity={currentVelocity}, speedChanged={speedChanged}");
+        }
         
         // 如果方向改变或速度差距较大，重新设置速度
         if (directionChanged || speedChanged)
@@ -239,7 +253,8 @@ public class PlayerMovementController : MonoBehaviour
         isMicroMoving = true;
         Vector2 startPosition = transform.position;
         float distance = Vector2.Distance(startPosition, targetPosition);
-        float duration = distance / microMoveMaxSpeed;
+        float microMoveSpeed = playerData != null ? playerData.microMoveSpeed : 5f;
+        float duration = distance / microMoveSpeed;
         float elapsedTime = 0f;
         
         while (elapsedTime < duration && isMicroMoving)
@@ -274,7 +289,7 @@ public class PlayerMovementController : MonoBehaviour
     /// <summary>
     /// 微调移动最大速度
     /// </summary>
-    public float MicroMoveMaxSpeed => microMoveMaxSpeed;
+    public float MicroMoveSpeed => playerData != null ? playerData.microMoveSpeed : 5f;
     
     #endregion
 }

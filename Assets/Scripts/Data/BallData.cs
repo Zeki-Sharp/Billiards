@@ -17,7 +17,7 @@ public class BallData : ScriptableObject
     
     [Header("特殊规则")]
     public bool isWhiteBall = false; // 是否为白球
-    public float maxSpeed = 10f; // 最大速度限制
+    public float maxSpeed = 50f; // 最大速度限制
     
     [Header("受击补偿力设置")]
     [Tooltip("受击补偿力大小")]

@@ -18,12 +18,8 @@ MonoBehaviour:
   ballData: {fileID: 11400000, guid: 5753a6296cab86e45ba7c2b9bfd00e6e, type: 2}
   maxHealth: 100
   damage: 50
-  attackCooldown: 1
-  moveSpeed: 2
+  microMoveSpeed: 2
   canLevelUp: 0
   startingLevel: 1
   maxLevel: 100
   experienceMultiplier: 1
-  attackRange: 3
-  contactRadius: 1
-  microMoveSpeed: 5
