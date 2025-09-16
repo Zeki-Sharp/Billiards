@@ -18,7 +18,6 @@ public class GameInitializer : MonoBehaviour
     private ChargeSystem chargeSystem;
     private EnergySystem energySystem;
     private TransitionManager transitionManager;
-    private EnemyManager enemyManager;
     private TimeManager timeManager;
     
     // 游戏对象引用
@@ -92,8 +91,6 @@ public class GameInitializer : MonoBehaviour
         energySystem = FindAnyObjectByType<EnergySystem>();
         timeManager = FindAnyObjectByType<TimeManager>();
         transitionManager = FindAnyObjectByType<TransitionManager>();
-        enemyManager = FindAnyObjectByType<EnemyManager>();
-        timeManager = FindAnyObjectByType<TimeManager>();
         
         if (showDebugInfo)
         {
@@ -149,7 +146,6 @@ public class GameInitializer : MonoBehaviour
             gameManager.SetGameFlowController(gameFlowController);
             gameManager.SetEnergySystem(energySystem);
             gameManager.SetTransitionManager(transitionManager);
-            gameManager.SetEnemyManager(enemyManager);
         }
         
         // 设置GameFlowController的组件引用
@@ -159,7 +155,6 @@ public class GameInitializer : MonoBehaviour
             gameFlowController.SetPlayerStateMachine(playerStateMachine);
             gameFlowController.SetPlayerCore(playerCore);
             gameFlowController.SetTransitionManager(transitionManager);
-            gameFlowController.SetEnemyManager(enemyManager);
             
             // 设置Player相关引用
             if (player != null)

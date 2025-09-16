@@ -31,7 +31,6 @@ public class GameManager : MonoBehaviour
     private EnergySystem energySystem;
     private TimeManager timeManager;
     private TransitionManager transitionManager;
-    private EnemyManager enemyManager;
     
     // 事件
     public System.Action<bool> OnGameStateChanged; // 游戏状态变化
@@ -283,10 +282,6 @@ public class GameManager : MonoBehaviour
         transitionManager = manager;
     }
     
-    public void SetEnemyManager(EnemyManager manager)
-    {
-        enemyManager = manager;
-    }
     
     #endregion
     

@@ -42,7 +42,6 @@ public class GameFlowController : MonoBehaviour
     // 组件引用（由GameInitializer设置）
     private EnergySystem energySystem;
     private TransitionManager transitionManager;
-    private EnemyManager enemyManager;
     private PlayerStateMachine playerStateMachine;
     private PlayerCore playerCore;
     
@@ -359,10 +358,6 @@ public class GameFlowController : MonoBehaviour
         transitionManager = manager;
     }
     
-    public void SetEnemyManager(EnemyManager manager)
-    {
-        enemyManager = manager;
-    }
     
     #endregion
     
