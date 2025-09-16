@@ -41,7 +41,6 @@ public class GameFlowController : MonoBehaviour
     
     // 组件引用（由GameInitializer设置）
     private EnergySystem energySystem;
-    private TimeStopManager timeStopManager;
     private TransitionManager transitionManager;
     private EnemyManager enemyManager;
     private PlayerStateMachine playerStateMachine;
@@ -115,12 +114,6 @@ public class GameFlowController : MonoBehaviour
         GameFlowState oldState = currentState;
         currentState = GameFlowState.Normal;
         
-        // 释放时停
-        if (timeStopManager != null)
-        {
-            timeStopManager.ReleaseTimeStop();
-        }
-        
         // 启用能量恢复
         if (energySystem != null)
         {
@@ -146,11 +139,6 @@ public class GameFlowController : MonoBehaviour
         GameFlowState oldState = currentState;
         currentState = GameFlowState.Charging;
         
-        // 应用完全时停
-        if (timeStopManager != null)
-        {
-            timeStopManager.ApplyTimeStop();
-        }
         
         // 禁用能量恢复
         if (energySystem != null)
@@ -173,12 +161,6 @@ public class GameFlowController : MonoBehaviour
         
         GameFlowState oldState = currentState;
         currentState = GameFlowState.Transition;
-        
-        // 应用部分时停
-        if (timeStopManager != null)
-        {
-            timeStopManager.ApplyPartialTimeStop();
-        }
         
         // 启用能量恢复
         if (energySystem != null)
@@ -370,11 +352,6 @@ public class GameFlowController : MonoBehaviour
     public void SetEnergySystem(EnergySystem system)
     {
         energySystem = system;
-    }
-    
-    public void SetTimeStopManager(TimeStopManager manager)
-    {
-        timeStopManager = manager;
     }
     
     public void SetTransitionManager(TransitionManager manager)

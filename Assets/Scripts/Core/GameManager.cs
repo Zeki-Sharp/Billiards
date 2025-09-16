@@ -29,7 +29,7 @@ public class GameManager : MonoBehaviour
     // 组件引用（由GameInitializer设置）
     private GameFlowController gameFlowController;
     private EnergySystem energySystem;
-    private TimeStopManager timeStopManager;
+    private TimeManager timeManager;
     private TransitionManager transitionManager;
     private EnemyManager enemyManager;
     
@@ -273,9 +273,9 @@ public class GameManager : MonoBehaviour
         energySystem = system;
     }
     
-    public void SetTimeStopManager(TimeStopManager manager)
+    public void SetTimeManager(TimeManager manager)
     {
-        timeStopManager = manager;
+        timeManager = manager;
     }
     
     public void SetTransitionManager(TransitionManager manager)

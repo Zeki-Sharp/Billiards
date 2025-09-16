@@ -25,6 +25,7 @@ public class Enemy : MonoBehaviour
     private const float ATTACK_COOLDOWN = 0.1f; // 0.1秒冷却时间
     private BallPhysics ballPhysics;
     private HealthBar healthBar; // 血条组件
+    private Animator enemyAnimator; // 敌人动画组件
     
     // 攻击间隔控制
     private float lastEnemyAttackTime = 0f;
@@ -62,14 +63,24 @@ public class Enemy : MonoBehaviour
         
         // 初始化血条
         InitializeHealthBar();
+        
+        // 初始化动画组件
+        InitializeAnimator();
     }
     
     void Update()
     {
-        // 敌人AI移动逻辑
+        // 获取缩放后的时间
+        float scaledDeltaTime = TimeManager.Instance != null ? 
+            TimeManager.Instance.GetEnemyDeltaTime() : Time.deltaTime;
+        
+        // 更新动画（根据设置决定是否应用时间缩放）
+        UpdateAnimations(scaledDeltaTime);
+        
+        // 敌人AI移动逻辑（根据设置决定是否应用时间缩放）
         if (enableAI && targetPlayer != null && IsAlive())
         {
-            MoveTowardsPlayer();
+            MoveTowardsPlayer(scaledDeltaTime);
         }
     }
     
@@ -101,15 +112,22 @@ public class Enemy : MonoBehaviour
     /// <summary>
     /// 敌人朝向玩家移动
     /// </summary>
-    void MoveTowardsPlayer()
+    void MoveTowardsPlayer(float deltaTime)
     {
         if (targetPlayer == null) return;
         
         // 计算朝向玩家的方向
         Vector2 direction = (targetPlayer.transform.position - transform.position).normalized;
         
+        // 根据TimeManager设置决定是否使用缩放时间
+        float actualDeltaTime = deltaTime;
+        if (TimeManager.Instance != null && !TimeManager.Instance.ShouldAffectEnemyMovement())
+        {
+            actualDeltaTime = Time.deltaTime; // 使用正常时间
+        }
+        
         // 移动敌人
-        transform.Translate(direction * moveSpeed * Time.deltaTime);
+        transform.Translate(direction * moveSpeed * actualDeltaTime);
     }
     
     /// <summary>
@@ -123,10 +141,18 @@ public class Enemy : MonoBehaviour
             return;
         }
         
-        // 检查攻击间隔
-        if (Time.time - lastEnemyAttackTime < attackInterval)
+        // 检查攻击间隔（根据设置决定是否受时停影响）
+        float actualAttackInterval = attackInterval;
+        if (TimeManager.Instance != null && TimeManager.Instance.ShouldAffectEnemyAttackInterval())
         {
-            Debug.Log($"Enemy {name}: 攻击冷却中，剩余时间: {attackInterval - (Time.time - lastEnemyAttackTime):F2}秒");
+            // 如果攻击间隔受时停影响，需要调整间隔时间
+            float timeScale = TimeManager.Instance.GetEnemyTimeScale();
+            actualAttackInterval = attackInterval / timeScale; // 时停时攻击间隔变长
+        }
+        
+        if (Time.time - lastEnemyAttackTime < actualAttackInterval)
+        {
+            Debug.Log($"Enemy {name}: 攻击冷却中，剩余时间: {actualAttackInterval - (Time.time - lastEnemyAttackTime):F2}秒");
             return;
         }
         
@@ -220,6 +246,40 @@ public class Enemy : MonoBehaviour
         else
         {
             Debug.LogWarning($"敌人 {name} 未找到HealthBar组件，请确保血条预制体包含HealthBar脚本");
+        }
+    }
+    
+    /// <summary>
+    /// 初始化动画组件
+    /// </summary>
+    void InitializeAnimator()
+    {
+        enemyAnimator = GetComponent<Animator>();
+        if (enemyAnimator != null)
+        {
+            Debug.Log($"敌人 {name} 动画组件初始化完成");
+        }
+        else
+        {
+            Debug.LogWarning($"敌人 {name} 未找到Animator组件");
+        }
+    }
+    
+    /// <summary>
+    /// 更新敌人动画（根据设置决定是否应用时间缩放）
+    /// </summary>
+    void UpdateAnimations(float deltaTime)
+    {
+        if (enemyAnimator != null)
+        {
+            // 根据TimeManager设置决定是否应用时间缩放
+            float timeScale = 1f;
+            if (TimeManager.Instance != null && TimeManager.Instance.ShouldAffectEnemyAnimation())
+            {
+                timeScale = TimeManager.Instance.GetEnemyTimeScale();
+            }
+            
+            enemyAnimator.speed = timeScale;
         }
     }
     

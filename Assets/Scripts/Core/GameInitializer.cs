@@ -17,9 +17,9 @@ public class GameInitializer : MonoBehaviour
     private PlayerCore playerCore;
     private ChargeSystem chargeSystem;
     private EnergySystem energySystem;
-    private TimeStopManager timeStopManager;
     private TransitionManager transitionManager;
     private EnemyManager enemyManager;
+    private TimeManager timeManager;
     
     // 游戏对象引用
     private Player player;
@@ -90,9 +90,10 @@ public class GameInitializer : MonoBehaviour
         // 查找其他核心组件（如果存在）
         chargeSystem = FindAnyObjectByType<ChargeSystem>();
         energySystem = FindAnyObjectByType<EnergySystem>();
-        timeStopManager = FindAnyObjectByType<TimeStopManager>();
+        timeManager = FindAnyObjectByType<TimeManager>();
         transitionManager = FindAnyObjectByType<TransitionManager>();
         enemyManager = FindAnyObjectByType<EnemyManager>();
+        timeManager = FindAnyObjectByType<TimeManager>();
         
         if (showDebugInfo)
         {
@@ -147,7 +148,6 @@ public class GameInitializer : MonoBehaviour
         {
             gameManager.SetGameFlowController(gameFlowController);
             gameManager.SetEnergySystem(energySystem);
-            gameManager.SetTimeStopManager(timeStopManager);
             gameManager.SetTransitionManager(transitionManager);
             gameManager.SetEnemyManager(enemyManager);
         }
@@ -158,7 +158,6 @@ public class GameInitializer : MonoBehaviour
             gameFlowController.SetEnergySystem(energySystem);
             gameFlowController.SetPlayerStateMachine(playerStateMachine);
             gameFlowController.SetPlayerCore(playerCore);
-            gameFlowController.SetTimeStopManager(timeStopManager);
             gameFlowController.SetTransitionManager(transitionManager);
             gameFlowController.SetEnemyManager(enemyManager);
             
