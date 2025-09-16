@@ -176,6 +176,63 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 92bb8c5569acb9348bf9d53ecaefe6fb, type: 3}
+--- !u!1 &12897489
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 12897491}
+  - component: {fileID: 12897490}
+  m_Layer: 0
+  m_Name: EnemySpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &12897490
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 12897489}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe803f38571597d4d9f7517dab3e277a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enemyDataList: []
+  enemyParent: {fileID: 0}
+  minX: -10
+  maxX: 10
+  minY: -5
+  maxY: 5
+  waveInterval: 10
+  enemiesPerWave: 0300000002000000040000000100000005000000
+  maxWaves: 10
+  autoStart: 1
+  loopWaves: 1
+  spawnKey: 32
+  toggleKey: 116
+--- !u!4 &12897491
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 12897489}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 6.5168805, y: 4.979571, z: -0.07274454}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &12911527
 GameObject:
   m_ObjectHideFlags: 0
@@ -8181,6 +8238,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 549718726474039696, guid: 92bb8c5569acb9348bf9d53ecaefe6fb, type: 3}
+      propertyPath: enemyData
+      value: 
+      objectReference: {fileID: 11400000, guid: ce82a34099b9d1f4899931eb09ed10ce, type: 2}
     - target: {fileID: 2956119747917118404, guid: 92bb8c5569acb9348bf9d53ecaefe6fb, type: 3}
       propertyPath: m_Name
       value: Enemy
@@ -11071,8 +11132,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9391105d18ce7b444a2f164e886a0d9a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ballData: {fileID: 11400000, guid: 5753a6296cab86e45ba7c2b9bfd00e6e, type: 2}
-  combatData: {fileID: 11400000, guid: e0daeecce0a44fd41883e7983ab9ec3a, type: 2}
+  playerData: {fileID: 11400000, guid: 9fa21c5d0e8b7b24d9ae0910aa7d5197, type: 2}
   playerCore: {fileID: 6734338411020087296}
   stateMachine: {fileID: 0}
   inputHandler: {fileID: 0}
@@ -11090,8 +11150,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 96bb1e49ec5d79d4ea2302f5e0e9b548, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ballData: {fileID: 11400000, guid: 5753a6296cab86e45ba7c2b9bfd00e6e, type: 2}
-  combatData: {fileID: 11400000, guid: e0daeecce0a44fd41883e7983ab9ec3a, type: 2}
+  playerData: {fileID: 0}
   chargeSystem: {fileID: 0}
 --- !u!114 &6734338411020087302
 MonoBehaviour:
@@ -11132,3 +11191,4 @@ SceneRoots:
   - {fileID: 1792804304}
   - {fileID: 1736499165}
   - {fileID: 1637308597}
+  - {fileID: 12897491}

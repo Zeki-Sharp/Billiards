@@ -2741,11 +2741,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b174bde790db6bc4f904b94447e341e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ballData: {fileID: 11400000, guid: d1c30c129175ecf48a42f1070d15a627, type: 2}
-  combatData: {fileID: 11400000, guid: 7bdb1f8f32d410a4fb7857b105b27e59, type: 2}
-  moveSpeed: 2
-  enableAI: 1
-  attackInterval: 1
+  enemyData: {fileID: 11400000, guid: 8d46072aeaab4c44fab958850bbe7872, type: 2}
 --- !u!1 &3650335641447170782
 GameObject:
   m_ObjectHideFlags: 0

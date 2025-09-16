@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 680835e44d1251848acb0e09b9c418ff, type: 3}
+  m_Name: EnemyData_Patrol_Contract
+  m_EditorClassIdentifier: 
+  enemyName: 
+  enemyPrefab: {fileID: 2956119747917118404, guid: 92bb8c5569acb9348bf9d53ecaefe6fb, type: 3}
+  enemyIcon: {fileID: 0}
+  ballData: {fileID: 11400000, guid: d1c30c129175ecf48a42f1070d15a627, type: 2}
+  maxHealth: 100
+  damage: 10
+  attackCooldown: 1
+  moveSpeed: 2
+  enableAI: 1
+  attackType: 0
+  movementType: 1
+  attackRange: 3
+  contactRadius: 1
+  bulletPrefab: {fileID: 0}
+  bulletSpeed: 10
+  bulletDamage: 8
+  bulletLifetime: 3
+  bulletOffset: {x: 0, y: 0}
+  followMinDistance: 1
+  followMaxDistance: 5
+  maintainDistance: 0
+  patrolSpeedMultiplier: 1
+  stuckDetectionTime: 0.2
+  bounceRandomOffset: 8
+  minMoveDistance: 0.4
+  spawnWeight: 1
+  spawnCost: 1
+  isBoss: 0
+  experienceValue: 10

@@ -23,8 +23,7 @@ using UnityEngine;
 public class PlayerCore : MonoBehaviour
 {
     [Header("数据设置")]
-    public BallData ballData; // 物理数据（由Player设置）
-    public BallCombatData combatData; // 战斗数据（由Player设置）
+    public PlayerData playerData; // 玩家配置数据（由Player设置）
     
     [Header("蓄力系统")]
     public ChargeSystem chargeSystem; // 蓄力系统引用
@@ -78,20 +77,20 @@ public class PlayerCore : MonoBehaviour
         }
         
         // 设置 BallData
-        if (ballData != null)
+        if (playerData != null && playerData.ballData != null)
         {
-            ballPhysics.ballData = ballData;
+            ballPhysics.ballData = playerData.ballData;
         }
         else
         {
-            Debug.LogError("PlayerCore: 请设置 BallData 资源！");
+            Debug.LogError("PlayerCore: 请设置 PlayerData 资源！");
         }
         
         // 订阅 BallPhysics 事件
         ballPhysics.OnBallStopped += OnBallStoppedHandler;
         
         // 初始化血量（currentHealth = maxHealth）
-        float maxHealth = combatData != null ? combatData.maxHealth : 100f;
+        float maxHealth = playerData != null ? playerData.maxHealth : 100f;
         currentHealth = maxHealth; // 初始化为满血
         InitializeHealthBar(currentHealth);
         
@@ -271,14 +270,14 @@ public class PlayerCore : MonoBehaviour
                 Vector2 wallDirection = ((Vector2)transform.position - collision.contacts[0].point).normalized;
                 
                 // 给白球添加撞墙充能力
-                Vector2 wallBoostForce = wallDirection * ballData.hitBoostForce * ballData.hitBoostMultiplier;
+                Vector2 wallBoostForce = wallDirection * playerData.ballData.hitBoostForce * playerData.ballData.hitBoostMultiplier;
                 ballPhysics.ApplyForce(wallBoostForce);
                 
                 Debug.Log($"PlayerCore: 白球撞墙充能 - 获得力 {wallBoostForce} (速度:{ballPhysics.GetSpeed():F2})");
             }
             else
             {
-                Debug.Log($"PlayerCore: 白球撞墙 - 速度过低({ballPhysics.GetSpeed():F2}<{ballData.boostSpeedThreshold})，无充能力");
+                Debug.Log($"PlayerCore: 白球撞墙 - 速度过低({ballPhysics.GetSpeed():F2}<{playerData.ballData.boostSpeedThreshold})，无充能力");
             }
         }
     }
@@ -303,7 +302,7 @@ public class PlayerCore : MonoBehaviour
         if (enemy == null) return;
         
         // 计算伤害和碰撞信息
-        float damage = combatData != null ? combatData.damage : 50f;
+        float damage = playerData != null ? playerData.damage : 50f;
         Vector3 hitPosition = (transform.position + collision.transform.position) * 0.5f;
         Vector3 hitDirection = (collision.transform.position - transform.position).normalized;
         
@@ -323,7 +322,7 @@ public class PlayerCore : MonoBehaviour
                 Vector2 collisionDirection = (transform.position - collision.transform.position).normalized;
                 
                 // 给双方都添加充能力
-                Vector2 boostForce = collisionDirection * ballData.hitBoostForce * ballData.hitBoostMultiplier;
+                Vector2 boostForce = collisionDirection * playerData.ballData.hitBoostForce * playerData.ballData.hitBoostMultiplier;
                 
                 // 给白球添加充能力
                 ballPhysics.ApplyForce(boostForce);
@@ -335,7 +334,7 @@ public class PlayerCore : MonoBehaviour
             }
             else
             {
-                Debug.Log($"PlayerCore: 白球碰撞敌人 - 速度过低({ballPhysics.GetSpeed():F2}<{ballData.boostSpeedThreshold})，无充能力");
+                Debug.Log($"PlayerCore: 白球碰撞敌人 - 速度过低({ballPhysics.GetSpeed():F2}<{playerData.ballData.boostSpeedThreshold})，无充能力");
             }
         }
     }
@@ -345,7 +344,7 @@ public class PlayerCore : MonoBehaviour
     /// </summary>
     bool CanGetBoost()
     {
-        return ballPhysics != null && ballData != null && ballPhysics.GetSpeed() > ballData.boostSpeedThreshold;
+        return ballPhysics != null && playerData != null && playerData.ballData != null && ballPhysics.GetSpeed() > playerData.ballData.boostSpeedThreshold;
     }
     
     #endregion
@@ -357,9 +356,9 @@ public class PlayerCore : MonoBehaviour
     /// </summary>
     public void TakeDamage(float damage)
     {
-        if (combatData == null)
+        if (playerData == null)
         {
-            Debug.LogError("PlayerCore: combatData 为空，无法处理伤害！");
+            Debug.LogError("PlayerCore: playerData 为空，无法处理伤害！");
             return;
         }
         
@@ -367,7 +366,7 @@ public class PlayerCore : MonoBehaviour
         currentHealth -= damage;
         currentHealth = Mathf.Max(0, currentHealth);
         
-        float maxHealth = combatData.maxHealth;
+        float maxHealth = playerData.maxHealth;
         
         Debug.Log($"PlayerCore: 受到伤害: {damage}, 当前血量: {currentHealth}/{maxHealth}");
         
@@ -401,8 +400,8 @@ public class PlayerCore : MonoBehaviour
     /// </summary>
     public float GetHealthPercentage()
     {
-        if (combatData == null) return 1f;
-        return currentHealth / combatData.maxHealth;
+        if (playerData == null) return 1f;
+        return currentHealth / playerData.maxHealth;
     }
     
     /// <summary>
@@ -426,7 +425,7 @@ public class PlayerCore : MonoBehaviour
     /// </summary>
     public float GetMaxHealth()
     {
-        return combatData != null ? combatData.maxHealth : 100f;
+        return playerData != null ? playerData.maxHealth : 100f;
     }
     
     #endregion
@@ -483,7 +482,7 @@ public class PlayerCore : MonoBehaviour
         if (healthBar != null)
         {
             healthBar.SetTarget(transform);
-            float maxHealth = combatData != null ? combatData.maxHealth : 100f;
+            float maxHealth = playerData != null ? playerData.maxHealth : 100f;
             healthBar.UpdateHealth(currentHealth, maxHealth);
             Debug.Log($"PlayerCore: 血条初始化完成 - 当前血量: {currentHealth}/{maxHealth}, 血量百分比: {currentHealth/maxHealth:F2}");
         }

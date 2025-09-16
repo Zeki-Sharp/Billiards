@@ -23,7 +23,7 @@ public class GameInitializer : MonoBehaviour
     // 游戏对象引用
     private Player player;
     private Enemy[] enemies;
-    private HoleManager holeManager;
+    //private HoleManager holeManager;
     private EnemySpawner enemySpawner;
     
     void Start()
@@ -114,12 +114,12 @@ public class GameInitializer : MonoBehaviour
             Debug.LogWarning("GameInitializer: 未找到任何敌人！");
         }
         
-        // 查找HoleManager
-        holeManager = FindAnyObjectByType<HoleManager>();
-        if (holeManager == null)
-        {
-            Debug.LogWarning("GameInitializer: 未找到HoleManager！");
-        }
+        // // 查找HoleManager
+        // holeManager = FindAnyObjectByType<HoleManager>();
+        // if (holeManager == null)
+        // {
+        //     Debug.LogWarning("GameInitializer: 未找到HoleManager！");
+        // }
         
         // 查找EnemySpawner
         enemySpawner = FindAnyObjectByType<EnemySpawner>();
@@ -232,15 +232,15 @@ public class GameInitializer : MonoBehaviour
         }
         
         
-        // 订阅HoleManager事件
-        if (holeManager != null)
-        {
-            holeManager.OnPlayerInHole += OnPlayerInHole;
-            if (showDebugInfo)
-            {
-                Debug.Log("GameInitializer: 订阅HoleManager事件");
-            }
-        }
+        // // 订阅HoleManager事件
+        // if (holeManager != null)
+        // {
+        //     holeManager.OnPlayerInHole += OnPlayerInHole;
+        //     if (showDebugInfo)
+        //     {
+        //         Debug.Log("GameInitializer: 订阅HoleManager事件");
+        //     }
+        // }
     }
     
     #endregion
@@ -249,13 +249,13 @@ public class GameInitializer : MonoBehaviour
     
     void PrepareGameScene()
     {
-        // 生成第一波敌人生成点
+        // 启动敌人生成系统
         if (enemySpawner != null)
         {
-            enemySpawner.CreateWaveSpawnPoints();
+            enemySpawner.StartSpawning();
             if (showDebugInfo)
             {
-                Debug.Log("GameInitializer: 生成第一波敌人生成点");
+                Debug.Log("GameInitializer: 启动敌人生成系统");
             }
         }
         

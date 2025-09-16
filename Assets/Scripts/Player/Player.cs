@@ -23,8 +23,7 @@ using UnityEngine;
 public class Player : MonoBehaviour
 {
     [Header("数据设置")]
-    public BallData ballData; // 物理数据
-    public BallCombatData combatData; // 战斗数据
+    public PlayerData playerData; // 玩家配置数据
     
     [Header("组件引用")]
     [SerializeField] private PlayerCore playerCore;
@@ -61,8 +60,7 @@ public class Player : MonoBehaviour
         // 设置数据到PlayerCore
         if (playerCore != null)
         {
-            playerCore.ballData = ballData;
-            playerCore.combatData = combatData;
+            playerCore.playerData = playerData;
         }
         
         if (stateMachine == null)

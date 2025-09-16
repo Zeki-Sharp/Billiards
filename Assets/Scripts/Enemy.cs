@@ -4,18 +4,7 @@ using UnityEngine.UI;
 public class Enemy : MonoBehaviour
 {
     [Header("数据设置")]
-    public BallData ballData; // 物理数据
-    public BallCombatData combatData; // 战斗数据
-    
-    [Header("移动设置")]
-    [Tooltip("敌人移动速度")]
-    public float moveSpeed = 2f;
-    [Tooltip("是否启用AI移动")]
-    public bool enableAI = true;
-    
-    [Header("攻击设置")]
-    [Tooltip("攻击间隔时间（秒）")]
-    public float attackInterval = 1f;
+    public EnemyData enemyData; // 敌人配置数据
     
     private float currentHealth;
     private Player targetPlayer;
@@ -33,7 +22,6 @@ public class Enemy : MonoBehaviour
     // 巡逻移动相关
     private Vector2 patrolDirection;
     private Vector2 lastPosition;
-    private float stuckTimer;
     private float lastMoveTime;
     private Vector2 stuckCheckPosition; // 开始检查卡住时的位置
     private float stuckCheckStartTime; // 开始检查卡住时的时间
@@ -43,9 +31,15 @@ public class Enemy : MonoBehaviour
     
     void Start()
     {
-        // 初始化血量（currentHealth = maxHealth）
-        float maxHealth = combatData != null ? combatData.maxHealth : 100f;
-        currentHealth = maxHealth; // 初始化为满血
+        // 检查配置数据
+        if (enemyData == null)
+        {
+            Debug.LogError($"Enemy {name}: enemyData 未设置！");
+            return;
+        }
+        
+        // 初始化血量
+        currentHealth = enemyData.maxHealth;
         targetPlayer = FindAnyObjectByType<Player>();
         
         // 获取或添加 BallPhysics 组件
@@ -56,13 +50,13 @@ public class Enemy : MonoBehaviour
         }
         
         // 设置 BallData
-        if (ballData != null)
+        if (enemyData.ballData != null)
         {
-            ballPhysics.ballData = ballData;
+            ballPhysics.ballData = enemyData.ballData;
         }
         else
         {
-            Debug.LogError("Enemy: 请设置 BallData 资源！");
+            Debug.LogError($"Enemy {name}: enemyData.ballData 未设置！");
         }
         
         // 初始化攻击范围朝向
@@ -100,13 +94,7 @@ public class Enemy : MonoBehaviour
     /// </summary>
     bool ShouldEnableAI()
     {
-        // 兼容性检查：优先使用配置化设置
-        if (combatData != null && combatData.isEnemy)
-        {
-            return combatData.enableAI;
-        }
-        // 向后兼容：使用旧设置
-        return enableAI;
+        return enemyData.enableAI;
     }
     
     /// <summary>
@@ -114,21 +102,13 @@ public class Enemy : MonoBehaviour
     /// </summary>
     void ExecuteMovementAI(float deltaTime)
     {
-        if (combatData == null || !combatData.isEnemy)
-        {
-            // 向后兼容：使用旧的移动逻辑
-            MoveTowardsPlayer(deltaTime);
-            return;
-        }
-        
         // 根据配置的移动方式执行不同的移动逻辑
-        switch (combatData.movementType)
+        switch (enemyData.movementType)
         {
             case MovementType.FollowPlayer:
                 MoveTowardsPlayer(deltaTime);
                 break;
             case MovementType.Patrol:
-                // 占位符：巡逻移动
                 ExecutePatrolMovement(deltaTime);
                 break;
         }
@@ -139,20 +119,13 @@ public class Enemy : MonoBehaviour
     /// </summary>
     void ExecuteAttackAI()
     {
-        if (combatData == null || !combatData.isEnemy)
-        {
-            // 向后兼容：使用旧的攻击逻辑（碰撞时触发）
-            return;
-        }
-        
         // 根据配置的攻击方式执行不同的攻击逻辑
-        switch (combatData.attackType)
+        switch (enemyData.attackType)
         {
             case AttackType.Contact:
                 // 接触攻击在碰撞时触发，这里不需要额外逻辑
                 break;
             case AttackType.Ranged:
-                // 占位符：远程攻击
                 ExecuteRangedAttack();
                 break;
         }
@@ -197,15 +170,15 @@ public class Enemy : MonoBehaviour
         Vector2 direction = (targetPlayer.transform.position - transform.position).normalized;
         
         // 检查是否需要保持距离
-        if (combatData != null && combatData.isEnemy && combatData.maintainDistance)
+        if (enemyData.maintainDistance)
         {
             float distance = Vector3.Distance(transform.position, targetPlayer.transform.position);
-            if (distance < combatData.followMinDistance)
+            if (distance < enemyData.followMinDistance)
             {
                 // 距离太近，远离目标
                 direction = -direction;
             }
-            else if (distance > combatData.followMaxDistance)
+            else if (distance > enemyData.followMaxDistance)
             {
                 // 距离太远，接近目标
                 // direction 已经是朝向目标的方向
@@ -233,12 +206,7 @@ public class Enemy : MonoBehaviour
     /// </summary>
     float GetMoveSpeed()
     {
-        if (combatData != null && combatData.isEnemy)
-        {
-            return combatData.moveSpeed;
-        }
-        // 向后兼容
-        return moveSpeed;
+        return enemyData.moveSpeed;
     }
     
     /// <summary>
@@ -252,7 +220,6 @@ public class Enemy : MonoBehaviour
         
         // 初始化位置记录
         lastPosition = transform.position;
-        stuckTimer = 0f;
         lastMoveTime = Time.time;
         stuckCheckPosition = transform.position;
         stuckCheckStartTime = Time.time;
@@ -264,13 +231,12 @@ public class Enemy : MonoBehaviour
     /// </summary>
     void ExecutePatrolMovement(float deltaTime)
     {
-        if (combatData == null) return;
         
         // 检查碰撞并处理反弹
         CheckCollisionAndBounce();
         
         // 执行移动
-        float patrolSpeed = GetMoveSpeed() * combatData.patrolSpeedMultiplier;
+        float patrolSpeed = GetMoveSpeed() * enemyData.patrolSpeedMultiplier;
         
         // 根据TimeManager设置决定是否使用缩放时间
         float actualDeltaTime = deltaTime;
@@ -303,7 +269,7 @@ public class Enemy : MonoBehaviour
         float timeSinceCheckStart = Time.time - stuckCheckStartTime;
         
         // 如果移动距离足够，重置检查
-        if (totalDistanceMoved >= combatData.minMoveDistance)
+        if (totalDistanceMoved >= enemyData.minMoveDistance)
         {
             stuckCheckPosition = currentPos;
             stuckCheckStartTime = Time.time;
@@ -311,7 +277,7 @@ public class Enemy : MonoBehaviour
         }
         
         // 如果时间超过了检测时间，且移动距离不够，则认为卡住
-        if (timeSinceCheckStart >= combatData.stuckDetectionTime)
+        if (timeSinceCheckStart >= enemyData.stuckDetectionTime)
         {
             return true;
         }
@@ -325,7 +291,7 @@ public class Enemy : MonoBehaviour
     bool CheckCollisionAndBounce()
     {
         //使用射线检测前方是否有碰撞
-        float checkDistance = GetMoveSpeed() * combatData.patrolSpeedMultiplier * Time.deltaTime * 2f;
+        float checkDistance = GetMoveSpeed() * enemyData.patrolSpeedMultiplier * Time.deltaTime * 2f;
         RaycastHit2D hit = Physics2D.Raycast(transform.position, patrolDirection, checkDistance);
         
         if (hit.collider != null && hit.collider.gameObject != gameObject)
@@ -334,7 +300,7 @@ public class Enemy : MonoBehaviour
             Vector2 reflectDirection = Vector2.Reflect(patrolDirection, hit.normal);
             
             // 添加随机偏移
-            float randomOffset = Random.Range(-combatData.bounceRandomOffset, combatData.bounceRandomOffset);
+            float randomOffset = Random.Range(-enemyData.bounceRandomOffset, enemyData.bounceRandomOffset);
             float newAngle = Mathf.Atan2(reflectDirection.y, reflectDirection.x) * Mathf.Rad2Deg + randomOffset;
             patrolDirection = new Vector2(Mathf.Cos(newAngle * Mathf.Deg2Rad), Mathf.Sin(newAngle * Mathf.Deg2Rad));
             
@@ -351,7 +317,6 @@ public class Enemy : MonoBehaviour
     {
         float randomAngle = Random.Range(0f, 360f);
         patrolDirection = new Vector2(Mathf.Cos(randomAngle * Mathf.Deg2Rad), Mathf.Sin(randomAngle * Mathf.Deg2Rad));
-        stuckTimer = 0f;
         lastPosition = transform.position;
         lastMoveTime = Time.time;
         stuckCheckPosition = transform.position;
@@ -385,12 +350,12 @@ public class Enemy : MonoBehaviour
         
         // 占位符实现：只打印debug信息
         Debug.Log($"Enemy {name}: [DEBUG] 执行远程攻击");
-        Debug.Log($"Enemy {name}: [DEBUG] 子弹配置 - 速度: {combatData.bulletSpeed}, 伤害: {combatData.bulletDamage}, 存活时间: {combatData.bulletLifetime}");
+        Debug.Log($"Enemy {name}: [DEBUG] 子弹配置 - 速度: {enemyData.bulletSpeed}, 伤害: {enemyData.bulletDamage}, 存活时间: {enemyData.bulletLifetime}");
         Debug.Log($"Enemy {name}: [DEBUG] 目标: {targetPlayer.name}, 距离: {Vector3.Distance(transform.position, targetPlayer.transform.position):F2}");
         
         // 显示攻击方向
         Vector3 attackDirection = (targetPlayer.transform.position - transform.position).normalized;
-        Debug.DrawRay(transform.position, attackDirection * combatData.attackRange, Color.red, 0.5f);
+        Debug.DrawRay(transform.position, attackDirection * enemyData.attackRange, Color.red, 0.5f);
         
         // TODO: 实现实际的远程攻击逻辑
         // 1. 创建子弹预制体
@@ -403,12 +368,7 @@ public class Enemy : MonoBehaviour
     /// </summary>
     float GetAttackInterval()
     {
-        if (combatData != null && combatData.isEnemy)
-        {
-            return combatData.attackCooldown;
-        }
-        // 向后兼容
-        return attackInterval;
+        return enemyData.attackCooldown;
     }
     
     /// <summary>
@@ -460,12 +420,7 @@ public class Enemy : MonoBehaviour
     /// </summary>
     float GetDamage()
     {
-        if (combatData != null && combatData.isEnemy)
-        {
-            return combatData.damage;
-        }
-        // 向后兼容
-        return combatData != null ? combatData.damage : 10f;
+        return enemyData.damage;
     }
     
     void OnCollisionEnter2D(Collision2D collision)
@@ -492,16 +447,16 @@ public class Enemy : MonoBehaviour
         // 撞墙时的处理
         if (collision.gameObject.CompareTag("Wall"))
         {
-            // 检查是否还能获得充能力（基于速度）
-            if (CanGetBoost())
-            {
-                // 计算撞墙方向（从墙壁指向敌人）
-                Vector2 wallDirection = ((Vector2)transform.position - collision.contacts[0].point).normalized;
-                
-                // 给敌人添加撞墙充能力
-                Vector2 wallBoostForce = wallDirection * ballData.hitBoostForce * ballData.hitBoostMultiplier;
-                ballPhysics.ApplyForce(wallBoostForce);
-            }
+        // 检查是否还能获得充能力（基于速度）
+        if (CanGetBoost())
+        {
+            // 计算撞墙方向（从墙壁指向敌人）
+            Vector2 wallDirection = ((Vector2)transform.position - collision.contacts[0].point).normalized;
+            
+            // 给敌人添加撞墙充能力
+            Vector2 wallBoostForce = wallDirection * enemyData.ballData.hitBoostForce * enemyData.ballData.hitBoostMultiplier;
+            ballPhysics.ApplyForce(wallBoostForce);
+        }
         }
     }
     
@@ -512,7 +467,7 @@ public class Enemy : MonoBehaviour
         currentHealth -= damage;
         currentHealth = Mathf.Max(0, currentHealth);
         
-        float maxHealth = combatData != null ? combatData.maxHealth : 100f;
+        float maxHealth = enemyData.maxHealth;
         // 更新血条
         if (healthBar != null)
         {
@@ -535,7 +490,7 @@ public class Enemy : MonoBehaviour
         if (healthBar != null)
         {
             healthBar.SetTarget(transform);
-            healthBar.UpdateHealth(currentHealth, combatData != null ? combatData.maxHealth : 100f);
+            healthBar.UpdateHealth(currentHealth, enemyData.maxHealth);
         }
         else
         {
@@ -620,7 +575,7 @@ public class Enemy : MonoBehaviour
     
     public float GetHealthPercentage()
     {
-        return currentHealth / (combatData != null ? combatData.maxHealth : 100f);
+        return currentHealth / enemyData.maxHealth;
     }
     
     public bool IsAlive()
@@ -641,6 +596,6 @@ public class Enemy : MonoBehaviour
     // 检查是否还能获得充能力（基于速度）
     private bool CanGetBoost()
     {
-        return ballPhysics != null && ballPhysics.GetSpeed() > ballData.boostSpeedThreshold;
+        return ballPhysics != null && ballPhysics.GetSpeed() > enemyData.ballData.boostSpeedThreshold;
     }
 }

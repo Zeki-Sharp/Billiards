@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public class EnemySpawner : MonoBehaviour
 {
     [Header("敌人生成设置")]
-    public GameObject enemyPrefab; // 敌人预制体
+    public EnemyData[] enemyDataList; // 敌人配置列表
     public Transform enemyParent; // 敌人父物体（可选）
     
     [Header("生成范围设置")]
@@ -14,154 +14,219 @@ public class EnemySpawner : MonoBehaviour
     public float minY = -5f;  // 生成范围下边界
     public float maxY = 5f;   // 生成范围上边界
     
-    [Header("生成点设置")]
-    public GameObject spawnPointPrefab; // 生成点预制体
-    
     [Header("波次配置")]
-    public int[] enemiesPerWave = {3, 2, 4, 1, 5}; // 每波敌人数数组，可以单独配置每一波
+    public float waveInterval = 10f; // 波次生成间隔（秒）
+    public int[] enemiesPerWave = {3, 2, 4, 1, 5}; // 每波敌人数数组
+    public int maxWaves = 10; // 最大波次数（0表示无限）
+    
+    [Header("生成控制")]
+    public bool autoStart = true; // 是否自动开始生成
+    public bool loopWaves = true; // 是否循环波次
     
     [Header("测试设置")]
-    public KeyCode spawnKey = KeyCode.Space; // 按空格生成敌人
+    public KeyCode spawnKey = KeyCode.Space; // 手动触发下一波
+    public KeyCode toggleKey = KeyCode.T; // 切换生成开关
     
     private List<Enemy> spawnedEnemies = new List<Enemy>(); // 已生成的敌人列表
     private Player targetPlayer;
     
-    // 生成点状态
-    private List<GameObject> currentSpawnPoints = new List<GameObject>(); // 当前生成点列表
-    private bool hasSpawnPoints = false; // 是否有生成点
-    private int currentWave = 0; // 当前波次
+    // 生成状态
+    private int currentWave = 0; // 当前波次索引
+    private float lastWaveTime = 0f; // 上次生成波次的时间
+    private bool isSpawning = false; // 是否正在生成
+    private int totalWavesSpawned = 0; // 已生成的波次总数
     
     void Start()
     {
         targetPlayer = FindAnyObjectByType<Player>();
         
-        if (enemyPrefab == null)
+        if (enemyDataList == null || enemyDataList.Length == 0)
         {
-            Debug.LogError("敌人预制体未设置！");
+            Debug.LogError("敌人配置列表未设置或为空！");
         }
         
-        Debug.Log($"EnemySpawner初始化完成，生成范围: X({minX}~{maxX}), Y({minY}~{maxY})");
+        if (autoStart)
+        {
+            StartSpawning();
+        }
+        
+        Debug.Log($"EnemySpawner初始化完成，生成范围: X({minX}~{maxX}), Y({minY}~{maxY}), 波次间隔: {waveInterval}秒");
     }
     
     void Update()
     {
-        // 按空格键：先生成波次生成点，再生成敌人
+        // 自动生成波次
+        if (isSpawning)
+        {
+            if (Time.time - lastWaveTime >= waveInterval)
+            {
+                SpawnNextWave();
+            }
+        }
+        
+        // 手动控制
         if (Input.GetKeyDown(spawnKey))
         {
-            if (!hasSpawnPoints)
+            SpawnNextWave();
+        }
+        
+        if (Input.GetKeyDown(toggleKey))
+        {
+            ToggleSpawning();
+        }
+    }
+    
+    /// <summary>
+    /// 开始生成
+    /// </summary>
+    public void StartSpawning()
+    {
+        isSpawning = true;
+        lastWaveTime = Time.time;
+        Debug.Log("敌人生成已开始");
+    }
+    
+    /// <summary>
+    /// 停止生成
+    /// </summary>
+    public void StopSpawning()
+    {
+        isSpawning = false;
+        Debug.Log("敌人生成已停止");
+    }
+    
+    /// <summary>
+    /// 切换生成状态
+    /// </summary>
+    public void ToggleSpawning()
+    {
+        if (isSpawning)
+        {
+            StopSpawning();
+        }
+        else
+        {
+            StartSpawning();
+        }
+    }
+    
+    /// <summary>
+    /// 生成下一波敌人
+    /// </summary>
+    public void SpawnNextWave()
+    {
+        // 检查是否达到最大波次限制
+        if (maxWaves > 0 && totalWavesSpawned >= maxWaves)
+        {
+            Debug.Log("已达到最大波次限制，停止生成");
+            StopSpawning();
+            return;
+        }
+        
+        // 获取当前波次的敌人数
+        int enemyCount = enemiesPerWave[currentWave];
+        
+        // 生成敌人
+        SpawnEnemies(enemyCount);
+        
+        // 更新状态
+        lastWaveTime = Time.time;
+        totalWavesSpawned++;
+        
+        Debug.Log($"第{totalWavesSpawned}波生成完成，敌人数量: {enemyCount}，当前敌人总数: {spawnedEnemies.Count}");
+        
+        // 移动到下一个波次配置
+        currentWave++;
+        if (currentWave >= enemiesPerWave.Length)
+        {
+            if (loopWaves)
             {
-                // 检查是否还有更多波次
-                if (currentWave >= enemiesPerWave.Length)
-                {
-                    Debug.Log("所有波次已完成！");
-                    return;
-                }
-                
-                // 第一步：生成波次生成点
-                CreateWaveSpawnPoints();
+                currentWave = 0; // 循环到第一个波次
             }
             else
             {
-                // 第二步：销毁所有生成点，生成敌人
-                SpawnEnemiesFromPoints();
+                Debug.Log("所有波次配置已完成");
+                StopSpawning();
             }
         }
     }
     
-    // 创建波次生成点
-    public void CreateWaveSpawnPoints()
+    /// <summary>
+    /// 生成指定数量的敌人
+    /// </summary>
+    public void SpawnEnemies(int count)
     {
-        if (spawnPointPrefab == null)
+        for (int i = 0; i < count; i++)
         {
-            Debug.LogError("生成点预制体未设置！");
-            return;
+            EnemyData selectedEnemyData = SelectEnemyData();
+            SpawnEnemyFromData(selectedEnemyData);
         }
-        
-        if (currentWave >= enemiesPerWave.Length)
-        {
-            Debug.Log("所有波次已完成！");
-            return;
-        }
-        
-        currentWave++;
-        currentSpawnPoints.Clear();
-        
-        // 获取当前波次的敌人数
-        int currentWaveEnemies = enemiesPerWave[currentWave - 1];
-        
-        // 创建指定数量的生成点
-        for (int i = 0; i < currentWaveEnemies; i++)
-        {
-            Vector3 spawnPosition = GenerateRandomPosition();
-            GameObject spawnPoint = Instantiate(spawnPointPrefab, spawnPosition, Quaternion.identity);
-            currentSpawnPoints.Add(spawnPoint);
-        }
-        
-        hasSpawnPoints = true;
-        Debug.Log($"第{currentWave}波：创建了{currentWaveEnemies}个生成点，按空格键生成敌人");
     }
     
-    // 从所有生成点生成敌人
-    public void SpawnEnemiesFromPoints()
+    /// <summary>
+    /// 根据权重选择敌人配置
+    /// </summary>
+    EnemyData SelectEnemyData()
     {
-        if (enemyPrefab == null)
+        if (enemyDataList == null || enemyDataList.Length == 0)
         {
-            Debug.LogError("敌人预制体未设置，无法生成敌人！");
-            return;
+            Debug.LogError("敌人配置列表为空！");
+            return null;
         }
         
-        if (currentSpawnPoints.Count == 0)
+        // 计算总权重
+        int totalWeight = 0;
+        foreach (var enemyData in enemyDataList)
         {
-            Debug.Log("没有生成点，无法生成敌人！");
-            return;
+            totalWeight += enemyData.spawnWeight;
         }
         
-        // 从每个生成点生成敌人
-        foreach (GameObject spawnPoint in currentSpawnPoints)
+        // 随机选择
+        int randomWeight = Random.Range(0, totalWeight);
+        int currentWeight = 0;
+        
+        foreach (var enemyData in enemyDataList)
         {
-            if (spawnPoint != null)
+            currentWeight += enemyData.spawnWeight;
+            if (randomWeight < currentWeight)
             {
-                Vector3 spawnPosition = spawnPoint.transform.position;
-                GameObject enemyObj = Instantiate(enemyPrefab, spawnPosition, Quaternion.identity, enemyParent);
-                
-                // 获取敌人组件
-                Enemy enemy = enemyObj.GetComponent<Enemy>();
-                if (enemy != null)
-                {
-                    // 添加到列表
-                    spawnedEnemies.Add(enemy);
-                    
-                    // 初始化敌人的攻击范围朝向
-                    enemy.InitializeAttackRange();
-                    
-                    // 新敌人生成完成，静态事件会自动处理死亡通知
-                    
-                    // 等待一帧确保初始化完成，然后显示攻击范围预览
-                    StartCoroutine(ShowPreviewAfterDelay(enemy));
-                }
-                else
-                {
-                    Debug.LogError("敌人预制体上没有Enemy组件！");
-                    Destroy(enemyObj);
-                }
+                return enemyData;
             }
         }
         
-        // 销毁所有生成点
-        foreach (GameObject spawnPoint in currentSpawnPoints)
-        {
-            if (spawnPoint != null)
-            {
-                Destroy(spawnPoint);
-            }
-        }
-        currentSpawnPoints.Clear();
-        hasSpawnPoints = false;
-    
-        
-        int currentWaveEnemies = enemiesPerWave[currentWave - 1];
-        Debug.Log($"第{currentWave}波：生成了{currentWaveEnemies}个敌人，当前敌人数量: {spawnedEnemies.Count}");
+        // 默认返回第一个
+        return enemyDataList[0];
     }
+    
+    /// <summary>
+    /// 根据配置数据生成敌人
+    /// </summary>
+    void SpawnEnemyFromData(EnemyData enemyData)
+    {
+        if (enemyData == null || enemyData.enemyPrefab == null)
+        {
+            Debug.LogError("敌人配置数据无效！");
+            return;
+        }
+        
+        Vector3 spawnPosition = GenerateRandomPosition();
+        GameObject enemyObj = Instantiate(enemyData.enemyPrefab, spawnPosition, Quaternion.identity, enemyParent);
+        
+        // 获取敌人组件并设置配置数据
+        Enemy enemy = enemyObj.GetComponent<Enemy>();
+        if (enemy != null)
+        {
+            enemy.enemyData = enemyData;
+            spawnedEnemies.Add(enemy);
+            enemy.InitializeAttackRange();
+        }
+        else
+        {
+            Debug.LogError("敌人预制体上没有Enemy组件！");
+            Destroy(enemyObj);
+        }
+    }
+    
     
     // 在固定范围内生成随机位置
     Vector3 GenerateRandomPosition()
@@ -169,37 +234,6 @@ public class EnemySpawner : MonoBehaviour
         float randomX = Random.Range(minX, maxX);
         float randomY = Random.Range(minY, maxY);
         return new Vector3(randomX, randomY, 0f);
-    }
-    
-    // 延迟显示攻击范围预览
-    System.Collections.IEnumerator ShowPreviewAfterDelay(Enemy enemy)
-    {
-        // 等待一帧确保所有初始化完成
-        yield return null;
-        
-        ShowEnemyPreview(enemy);
-    }
-    
-    // 为敌人显示攻击范围预览
-    void ShowEnemyPreview(Enemy enemy)
-    {
-        if (enemy == null) return;
-        
-        // 获取敌人的攻击范围组件
-        AttackRange attackRange = enemy.GetComponentInChildren<AttackRange>();
-        if (attackRange != null)
-        {
-            // 先重新初始化攻击范围，确保方向正确
-            enemy.InitializeAttackRange();
-            
-            // 然后显示预览
-            attackRange.ShowPreview();
-            Debug.Log($"为敌人 {enemy.name} 显示了攻击范围预览");
-        }
-        else
-        {
-            Debug.LogWarning($"敌人 {enemy.name} 没有找到AttackRange组件！");
-        }
     }
     
     // 清除所有生成的敌人
@@ -230,56 +264,68 @@ public class EnemySpawner : MonoBehaviour
     
     void OnGUI()
     {
-        // 检查是否所有波次已完成
-        if (currentWave >= enemiesPerWave.Length)
+        GUI.Label(new Rect(10, 10, 300, 20), $"生成状态: {(isSpawning ? "运行中" : "已停止")}");
+        GUI.Label(new Rect(10, 30, 300, 20), $"当前敌人数量: {spawnedEnemies.Count}");
+        GUI.Label(new Rect(10, 50, 300, 20), $"已生成波次: {totalWavesSpawned}/{(maxWaves > 0 ? maxWaves.ToString() : "∞")}");
+        
+        if (isSpawning)
         {
-            GUI.Label(new Rect(10, 10, 300, 20), "所有波次已完成！");
-            GUI.Label(new Rect(10, 30, 300, 20), $"总敌人数: {spawnedEnemies.Count}");
-            return;
+            float timeUntilNext = waveInterval - (Time.time - lastWaveTime);
+            GUI.Label(new Rect(10, 70, 300, 20), $"下次生成倒计时: {timeUntilNext:F1}秒");
         }
         
-        // 在屏幕上显示操作提示
-        if (!hasSpawnPoints)
+        GUI.Label(new Rect(10, 90, 300, 20), $"按 {spawnKey} 手动生成下一波");
+        GUI.Label(new Rect(10, 110, 300, 20), $"按 {toggleKey} 切换生成开关");
+        
+        if (maxWaves > 0 && totalWavesSpawned >= maxWaves)
         {
-            int nextWave = currentWave + 1;
-            int nextWaveEnemies = enemiesPerWave[currentWave];
-            GUI.Label(new Rect(10, 10, 300, 20), $"按 {spawnKey} 键创建第{nextWave}波生成点 ({nextWaveEnemies}个)");
+            GUI.Label(new Rect(10, 130, 300, 20), "已达到最大波次限制！");
         }
-        else
-        {
-            int currentWaveEnemies = enemiesPerWave[currentWave - 1];
-            GUI.Label(new Rect(10, 10, 300, 20), $"按 {spawnKey} 键生成第{currentWave}波敌人 ({currentWaveEnemies}个)");
-        }
-        GUI.Label(new Rect(10, 30, 300, 20), $"当前敌人数量: {spawnedEnemies.Count}");
-        GUI.Label(new Rect(10, 50, 300, 20), $"生成点状态: {(hasSpawnPoints ? $"已创建{currentSpawnPoints.Count}个" : "无")}");
-        GUI.Label(new Rect(10, 70, 300, 20), $"波次进度: {currentWave}/{enemiesPerWave.Length}");
     }
     
     // 获取剩余敌人数（包括待生成的）
     public int GetRemainingEnemiesCount()
     {
-        int count = 0;
+        int count = spawnedEnemies.Count; // 当前场景中的敌人
         
-        // 当前场景中的敌人
-        count += spawnedEnemies.Count;
-        
-        // 待生成的敌人（只计算当前波次及以后的波次）
-        if (currentWave < enemiesPerWave.Length)
+        // 如果生成已停止，只返回当前敌人数量
+        if (!isSpawning)
         {
-            // 当前波次剩余敌人（如果当前波次还没生成完）
-            if (hasSpawnPoints)
-            {
-                count += currentSpawnPoints.Count; // 当前波次的生成点数量
-            }
-            
-            // 后续波次的敌人
-            for (int i = currentWave + 1; i < enemiesPerWave.Length; i++)
-            {
-                count += enemiesPerWave[i];
-            }
+            return count;
         }
         
-        Debug.Log($"EnemySpawner剩余敌人数计算: 当前敌人={spawnedEnemies.Count}, 当前波次={currentWave}, 有生成点={hasSpawnPoints}, 生成点数量={currentSpawnPoints.Count}, 总计={count}");
+        // 计算待生成的敌人数量
+        if (maxWaves > 0)
+        {
+            // 有最大波次限制的情况
+            int remainingWaves = maxWaves - totalWavesSpawned;
+            if (remainingWaves > 0)
+            {
+                // 计算剩余波次的敌人数量
+                int currentWaveIndex = currentWave;
+                for (int i = 0; i < remainingWaves; i++)
+                {
+                    count += enemiesPerWave[currentWaveIndex];
+                    currentWaveIndex++;
+                    if (currentWaveIndex >= enemiesPerWave.Length)
+                    {
+                        if (loopWaves)
+                        {
+                            currentWaveIndex = 0; // 循环到第一个波次
+                        }
+                        else
+                        {
+                            break; // 不循环，停止计算
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            // 无限生成的情况，返回当前敌人数量（因为无法预知未来会生成多少）
+            // 或者可以返回一个估算值
+        }
         
         return count;
     }
