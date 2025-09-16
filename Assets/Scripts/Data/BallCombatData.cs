@@ -6,8 +6,6 @@ public class BallCombatData : ScriptableObject
     [Header("血量设置")]
     [Tooltip("最大血量")]
     public float maxHealth = 100f;
-    [Tooltip("当前血量")]
-    public float currentHealth = 100f;
     
     [Header("移动设置")]
     [Tooltip("移动速度")]

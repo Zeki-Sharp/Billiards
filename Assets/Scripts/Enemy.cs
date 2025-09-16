@@ -35,7 +35,9 @@ public class Enemy : MonoBehaviour
     
     void Start()
     {
-        currentHealth = combatData != null ? combatData.currentHealth : 100f;
+        // 初始化血量（currentHealth = maxHealth）
+        float maxHealth = combatData != null ? combatData.maxHealth : 100f;
+        currentHealth = maxHealth; // 初始化为满血
         targetPlayer = FindAnyObjectByType<Player>();
         
         // 获取或添加 BallPhysics 组件

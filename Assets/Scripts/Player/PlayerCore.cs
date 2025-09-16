@@ -33,6 +33,9 @@ public class PlayerCore : MonoBehaviour
     private BallPhysics ballPhysics;
     private HealthBar healthBar;
     
+    // 血量管理（实例变量，不从ScriptableObject读取）
+    private float currentHealth;
+    
     // 蓄力相关（已移至ChargeSystem）
     
     // 防重复触发机制
@@ -87,8 +90,9 @@ public class PlayerCore : MonoBehaviour
         // 订阅 BallPhysics 事件
         ballPhysics.OnBallStopped += OnBallStoppedHandler;
         
-        // 初始化血量
-        float currentHealth = combatData != null ? combatData.currentHealth : 100f;
+        // 初始化血量（currentHealth = maxHealth）
+        float maxHealth = combatData != null ? combatData.maxHealth : 100f;
+        currentHealth = maxHealth; // 初始化为满血
         InitializeHealthBar(currentHealth);
         
         // 确保球体在初始化后完全停止
@@ -359,11 +363,10 @@ public class PlayerCore : MonoBehaviour
             return;
         }
         
-        // 更新血量数据
-        combatData.currentHealth -= damage;
-        combatData.currentHealth = Mathf.Max(0, combatData.currentHealth);
+        // 更新血量数据（使用实例变量）
+        currentHealth -= damage;
+        currentHealth = Mathf.Max(0, currentHealth);
         
-        float currentHealth = combatData.currentHealth;
         float maxHealth = combatData.maxHealth;
         
         Debug.Log($"PlayerCore: 受到伤害: {damage}, 当前血量: {currentHealth}/{maxHealth}");
@@ -398,9 +401,8 @@ public class PlayerCore : MonoBehaviour
     /// </summary>
     public float GetHealthPercentage()
     {
-        float currentHealth = combatData != null ? combatData.currentHealth : 100f;
-        float maxHealth = combatData != null ? combatData.maxHealth : 100f;
-        return currentHealth / maxHealth;
+        if (combatData == null) return 1f;
+        return currentHealth / combatData.maxHealth;
     }
     
     /// <summary>
@@ -408,8 +410,23 @@ public class PlayerCore : MonoBehaviour
     /// </summary>
     public bool IsAlive()
     {
-        float currentHealth = combatData != null ? combatData.currentHealth : 100f;
         return currentHealth > 0;
+    }
+    
+    /// <summary>
+    /// 获取当前血量
+    /// </summary>
+    public float GetCurrentHealth()
+    {
+        return currentHealth;
+    }
+    
+    /// <summary>
+    /// 获取最大血量
+    /// </summary>
+    public float GetMaxHealth()
+    {
+        return combatData != null ? combatData.maxHealth : 100f;
     }
     
     #endregion
@@ -468,7 +485,7 @@ public class PlayerCore : MonoBehaviour
             healthBar.SetTarget(transform);
             float maxHealth = combatData != null ? combatData.maxHealth : 100f;
             healthBar.UpdateHealth(currentHealth, maxHealth);
-            Debug.Log("PlayerCore: 血条初始化完成");
+            Debug.Log($"PlayerCore: 血条初始化完成 - 当前血量: {currentHealth}/{maxHealth}, 血量百分比: {currentHealth/maxHealth:F2}");
         }
         else
         {

@@ -26,9 +26,20 @@ public class GameUIPanel : MonoBehaviour
             playerCore.OnHealthChanged += UpdateHealthBar;
         }
         
+        // 延迟初始化UI，确保PlayerCore已经完成初始化
+        StartCoroutine(InitializeUIAfterDelay());
+    }
+    
+    System.Collections.IEnumerator InitializeUIAfterDelay()
+    {
+        // 等待一帧确保所有组件都完成初始化
+        yield return null;
+        
         // 初始化UI
         UpdateEnergyBar(energySystem != null ? energySystem.GetCurrentEnergy() : 100f);
         UpdateHealthBar(playerCore != null ? playerCore.GetHealthPercentage() : 1f);
+        
+        Debug.Log($"GameUIPanel: UI初始化完成 - 能量: {energySystem?.GetCurrentEnergy()}, 血量: {playerCore?.GetHealthPercentage()}");
     }
     
     void UpdateEnergyBar(float currentEnergy)
