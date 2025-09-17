@@ -33,6 +33,7 @@ public class GameFlowController : MonoBehaviour
     [SerializeField] private bool enableAutoTransition = true;
     [SerializeField] private float transitionTimeout = 5f; // 过渡状态超时时间
     
+    
     [Header("调试")]
     [SerializeField] private bool showDebugInfo = true;
     
@@ -134,6 +135,12 @@ public class GameFlowController : MonoBehaviour
         GameFlowState oldState = currentState;
         currentState = GameFlowState.Charging;
         
+        // 触发时停入场特效
+        EffectEvent.Trigger("Timestop In Effect", Vector3.zero);
+        if (showDebugInfo)
+        {
+            Debug.Log("GameFlowController: 触发时停入场特效");
+        }
         
         // 禁用能量恢复
         if (energySystem != null)
@@ -152,6 +159,13 @@ public class GameFlowController : MonoBehaviour
         
         GameFlowState oldState = currentState;
         currentState = GameFlowState.Transition;
+        
+        // 触发时停出场特效
+        EffectEvent.Trigger("Timestop Out Effect", Vector3.zero);
+        if (showDebugInfo)
+        {
+            Debug.Log("GameFlowController: 触发时停出场特效");
+        }
         
         // 启用能量恢复
         if (energySystem != null)

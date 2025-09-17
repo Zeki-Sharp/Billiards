@@ -30,6 +30,10 @@ public static class EffectMapping
         {"Enemy Spawn Effect", "Enemy Spawn Effect"},
         {"Enemy Spawn Preview Effect", "Enemy Spawn Preview Effect"},
         
+        // 时停相关特效
+        {"Timestop In Effect", "Timestop In Effect"},
+        {"Timestop Out Effect", "Timestop Out Effect"},
+        
         // 可以继续添加更多特效映射
         // {"NewEffect", "New Effect MMF Object Name"}
     };

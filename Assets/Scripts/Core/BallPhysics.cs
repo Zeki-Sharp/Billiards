@@ -202,7 +202,7 @@ public class BallPhysics : MonoBehaviour
         bool dampingChanged = Mathf.Abs(targetDamping - lastDamping) > ballData.updateThreshold;
         
         // 更新弹性系数
-        if (bouncinessChanged)
+        if (bouncinessChanged && material != null)
         {
             material.bounciness = targetBounciness;
             lastBounciness = targetBounciness;
