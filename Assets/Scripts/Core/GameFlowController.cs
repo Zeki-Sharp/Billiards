@@ -135,12 +135,6 @@ public class GameFlowController : MonoBehaviour
         GameFlowState oldState = currentState;
         currentState = GameFlowState.Charging;
         
-        // 触发时停入场特效
-        EffectEvent.Trigger("Timestop In Effect", Vector3.zero);
-        if (showDebugInfo)
-        {
-            Debug.Log("GameFlowController: 触发时停入场特效");
-        }
         
         // 禁用能量恢复
         if (energySystem != null)

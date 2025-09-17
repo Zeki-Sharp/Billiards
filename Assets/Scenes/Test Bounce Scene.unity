@@ -953,7 +953,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 544584979}
-  - component: {fileID: 544584980}
   m_Layer: 0
   m_Name: Global Effect
   m_TagString: Untagged
@@ -974,23 +973,9 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1816975963}
-  - {fileID: 679945946}
+  - {fileID: 1259483396}
   m_Father: {fileID: 38867660}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &544584980
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 544584978}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c2fa73978eb192048979b1e651051dfb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  enableDebugLog: 1
 --- !u!1 &551118085
 GameObject:
   m_ObjectHideFlags: 0
@@ -6077,12 +6062,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 679945945}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 544584979}
+  m_Father: {fileID: 1259483396}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &679945947
 MonoBehaviour:
@@ -8865,6 +8850,53 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5360420791860199752, guid: 2d86053af5e50c446a06f75cbdecb65b, type: 3}
   m_PrefabInstance: {fileID: 5924173280866626688}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1259483395
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1259483396}
+  - component: {fileID: 1259483397}
+  m_Layer: 0
+  m_Name: EffectPlayer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1259483396
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1259483395}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1816975963}
+  - {fileID: 679945946}
+  m_Father: {fileID: 544584979}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1259483397
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1259483395}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2fa73978eb192048979b1e651051dfb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableDebugLog: 1
 --- !u!1 &1275009111
 GameObject:
   m_ObjectHideFlags: 0
@@ -9153,8 +9185,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enableAutoTransition: 1
   transitionTimeout: 5
-  timestopInEffect: {fileID: 0}
-  timestopOutEffect: {fileID: 0}
   showDebugInfo: 1
 --- !u!1 &1370478849
 GameObject:
@@ -10879,12 +10909,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1816975962}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 544584979}
+  m_Father: {fileID: 1259483396}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1816975964
 MonoBehaviour:
@@ -11108,7 +11138,7 @@ MonoBehaviour:
           InterruptsOnStop: 1
           NumberOfRepeats: 0
           RepeatForever: 0
-          DelayBetweenRepeats: 1
+          DelayBetweenRepeats: 0
           PlayCount: 0
           LimitPlayCount: 0
           MaxPlayCount: 3
@@ -11196,7 +11226,7 @@ MonoBehaviour:
         Mode: 0
         Duration: 0.2
         StartsOff: 0
-        RelativeValues: 1
+        RelativeValues: 0
         AllowAdditivePlays: 0
         DetermineInitialValueOnPlay: 0
         LevelCurve:
@@ -11232,7 +11262,7 @@ MonoBehaviour:
           EnumConditions: 0100010000000000000000000000000000000000000000000000000000000000
         RemapLevelZero: 0
         RemapLevelOne: 1
-        InstantLevel: 0
+        InstantLevel: 1
         ToDestinationLevel: 5
 --- !u!1 &1887330636
 GameObject:
@@ -11783,7 +11813,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &2088273611
 MonoBehaviour:
   m_ObjectHideFlags: 0
