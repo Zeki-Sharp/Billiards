@@ -19,12 +19,25 @@ public class TransitionManager : MonoBehaviour
     [Header("调试")]
     [SerializeField] private bool showDebugInfo = true;
     
+    // 时停特效控制器
+    private TimeStopEffect timeStopEffect;
+    
     private float transitionTimer = 0f;
     private bool isTransitioning = false;
     
     // 事件
     public System.Action OnTransitionStart; // 过渡开始
     public System.Action OnTransitionEnd; // 过渡结束
+    
+    void Start()
+    {
+        // 获取TimeStopEffect引用
+        timeStopEffect = FindFirstObjectByType<TimeStopEffect>();
+        if (timeStopEffect == null)
+        {
+            Debug.LogWarning("TransitionManager: 未找到TimeStopEffect，时停特效淡出将不可用");
+        }
+    }
     
     void Update()
     {
@@ -46,6 +59,12 @@ public class TransitionManager : MonoBehaviour
         isTransitioning = true;
         transitionTimer = transitionDuration;
         OnTransitionStart?.Invoke();
+        
+        // 触发时停特效淡出
+        if (timeStopEffect != null)
+        {
+            timeStopEffect.FadeOut(transitionDuration);
+        }
         
         if (showDebugInfo)
         {

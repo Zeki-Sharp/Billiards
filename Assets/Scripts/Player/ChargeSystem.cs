@@ -37,6 +37,7 @@ public class ChargeSystem : MonoBehaviour
     // 时停特效状态
     private bool timestopEffectTriggered = false; // 是否已触发时停入场特效
     private TransitionManager transitionManager; // 用于获取门槛值
+    private TimeStopEffect timeStopEffect; // 时停特效控制器
     
     // 能量系统引用
     private EnergySystem energySystem;
@@ -63,6 +64,13 @@ public class ChargeSystem : MonoBehaviour
         if (transitionManager == null)
         {
             Debug.LogWarning("ChargeSystem: 未找到TransitionManager，时停特效门槛值将使用默认值");
+        }
+        
+        // 获取TimeStopEffect引用
+        timeStopEffect = FindFirstObjectByType<TimeStopEffect>();
+        if (timeStopEffect == null)
+        {
+            Debug.LogWarning("ChargeSystem: 未找到TimeStopEffect，时停特效将不可用");
         }
     }
     
@@ -164,8 +172,8 @@ public class ChargeSystem : MonoBehaviour
         float chargingTime = Time.time - chargingStartTime;
         chargingPower = Mathf.Clamp01(chargingTime / maxChargingTime);
         
-        // 检查时停特效触发
-        CheckTimestopEffectTrigger();
+        // 更新时停特效强度
+        UpdateTimestopEffect();
         
         // 计算当前力度
         CalculateCurrentForce();
@@ -309,29 +317,12 @@ public class ChargeSystem : MonoBehaviour
     /// <summary>
     /// 检查时停特效触发
     /// </summary>
-    private void CheckTimestopEffectTrigger()
+    private void UpdateTimestopEffect()
     {
-        if (timestopEffectTriggered) return;
+        if (timeStopEffect == null) return;
         
-        // 获取门槛值（从TransitionManager获取，如果没有则使用默认值0.3）
-        float threshold = 0.3f; // 默认值
-        if (transitionManager != null)
-        {
-            // 假设TransitionManager有GetTransitionThreshold方法
-            // threshold = transitionManager.GetTransitionThreshold();
-        }
-        
-        // 检查是否达到门槛值
-        if (chargingPower >= threshold)
-        {
-            timestopEffectTriggered = true;
-            EffectEvent.Trigger("Timestop In Effect", Vector3.zero);
-            
-            if (showDebugInfo)
-            {
-                Debug.Log($"ChargeSystem: 触发时停入场特效 - 充能进度: {chargingPower:F2}, 门槛值: {threshold:F2}");
-            }
-        }
+        // 直接设置时停特效强度（跟随充能进度）
+        timeStopEffect.SetIntensity(chargingPower);
     }
     
     #endregion
