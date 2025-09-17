@@ -142,13 +142,23 @@ public class EffectManager : MonoBehaviour, MMEventListener<EffectEvent>, MMEven
         string attackEffectType = $"{attackEffectEvent.AttackType} Attack Effect";
         PlayEffectDirectly(attackEffectType, attackEffectEvent.Position, attackEffectEvent.Direction, attackEffectEvent.Attacker, attackEffectEvent.AttackerTag, attackEffectEvent);
         
-        // 播放受击者特效
-        string beHitEffectType = "Be Hit Effect";
-        PlayEffectDirectly(beHitEffectType, attackEffectEvent.Position, attackEffectEvent.Direction, attackEffectEvent.Target, attackEffectEvent.TargetTag, attackEffectEvent);
-        
-        if (enableDebugLog)
+        // 播放受击者特效 - 添加状态检查
+        if (ShouldPlayBeHitEffect(attackEffectEvent.Target))
         {
-            Debug.Log($"EffectManager 已播放特效: {attackEffectType} 和 {beHitEffectType}");
+            string beHitEffectType = "Be Hit Effect";
+            PlayEffectDirectly(beHitEffectType, attackEffectEvent.Position, attackEffectEvent.Direction, attackEffectEvent.Target, attackEffectEvent.TargetTag, attackEffectEvent);
+            
+            if (enableDebugLog)
+            {
+                Debug.Log($"EffectManager 已播放特效: {attackEffectType} 和 {beHitEffectType}");
+            }
+        }
+        else
+        {
+            if (enableDebugLog)
+            {
+                Debug.Log($"EffectManager 跳过受击特效播放 - 目标状态不允许");
+            }
         }
     }
     
@@ -185,6 +195,31 @@ public class EffectManager : MonoBehaviour, MMEventListener<EffectEvent>, MMEven
                 Debug.LogWarning($"目标对象 {targetObject.name} 及其子对象上没有EffectPlayer组件");
             }
         }
+    }
+    
+    /// <summary>
+    /// 检查是否应该播放受击特效
+    /// 与PlayerCore的TakeDamage方法保持一致的逻辑
+    /// </summary>
+    private bool ShouldPlayBeHitEffect(GameObject target)
+    {
+        if (target == null) return false;
+        
+        // 检查玩家状态，只有在Idle状态才能播放受击特效
+        if (target.CompareTag("Player"))
+        {
+            PlayerStateMachine stateMachine = target.GetComponent<PlayerStateMachine>();
+            if (stateMachine != null && !stateMachine.IsIdle)
+            {
+                if (enableDebugLog)
+                {
+                    Debug.Log($"EffectManager: 玩家不在Idle状态，跳过受击特效 - 当前状态: {stateMachine.CurrentState}");
+                }
+                return false;
+            }
+        }
+        
+        return true;
     }
     
     /// <summary>

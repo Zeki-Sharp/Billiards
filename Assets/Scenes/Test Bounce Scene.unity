@@ -8500,7 +8500,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 5924173280866626688}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6da43522623d4704e979466dc7650b65, type: 3}
   m_Name: 
@@ -9857,7 +9857,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15b9ca4e3e4527543949e7fcc83cbeb7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyTimeScale: 0.1
+  enemyTimeScale: 0.2
   playerTimeScale: 1
   enableEnemyTimeStopInCharging: 1
   enableEnemyTimeStopInTransition: 1
@@ -11349,6 +11349,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 2097763790536435821, guid: 2d86053af5e50c446a06f75cbdecb65b, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2097763790536435821, guid: 2d86053af5e50c446a06f75cbdecb65b, type: 3}
       propertyPath: FeedbacksList.Array.size
       value: 6
       objectReference: {fileID: 0}
@@ -11384,6 +11388,14 @@ PrefabInstance:
       propertyPath: managedReferences[3244891196559982777].Owner
       value: 
       objectReference: {fileID: 998892754}
+    - target: {fileID: 2097763790536435821, guid: 2d86053af5e50c446a06f75cbdecb65b, type: 3}
+      propertyPath: managedReferences[3244891196559982754].Active
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2097763790536435821, guid: 2d86053af5e50c446a06f75cbdecb65b, type: 3}
+      propertyPath: managedReferences[3244891196559982755].Active
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2097763790536435821, guid: 2d86053af5e50c446a06f75cbdecb65b, type: 3}
       propertyPath: managedReferences[3244891196559982777].Active
       value: 1
