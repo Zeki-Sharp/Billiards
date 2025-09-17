@@ -63,7 +63,17 @@ public class TransitionManager : MonoBehaviour
         // 触发时停特效淡出
         if (timeStopEffect != null)
         {
-            timeStopEffect.FadeOut(transitionDuration);
+            // 检查是否为门槛模式，使用对应的淡出方法
+            if (timeStopEffect.CurrentTimestopMode == TimeStopEffect.TimestopMode.Threshold)
+            {
+                // 门槛模式：在transition结束时才淡出
+                // 这里不立即淡出，而是在transition结束时调用ThresholdFadeOut
+            }
+            else
+            {
+                // 实时模式：立即淡出
+                timeStopEffect.FadeOut(transitionDuration);
+            }
         }
         
         if (showDebugInfo)
@@ -113,6 +123,12 @@ public class TransitionManager : MonoBehaviour
         isTransitioning = false;
         transitionTimer = 0f;
         OnTransitionEnd?.Invoke();
+        
+        // 触发门槛模式时停特效出场（如果适用）
+        if (timeStopEffect != null && timeStopEffect.CurrentTimestopMode == TimeStopEffect.TimestopMode.Threshold)
+        {
+            timeStopEffect.ThresholdFadeOut();
+        }
         
         // 直接通知GameFlowController切换到Normal状态
         if (GameFlowController.Instance != null)

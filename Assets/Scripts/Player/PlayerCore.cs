@@ -365,6 +365,15 @@ public class PlayerCore : MonoBehaviour
             return;
         }
         
+        // 检查当前玩家状态，只有在Idle状态才能受击
+        PlayerStateMachine stateMachine = GetComponent<PlayerStateMachine>();
+        if (stateMachine != null && !stateMachine.IsIdle)
+        {
+            Debug.Log($"PlayerCore: 玩家不在Idle状态，免疫伤害 - 当前状态: {stateMachine.CurrentState}, 伤害: {damage}");
+            return;
+        }
+        
+        
         // 更新血量数据（使用实例变量）
         currentHealth -= damage;
         currentHealth = Mathf.Max(0, currentHealth);
