@@ -44,6 +44,7 @@ public class PlayerStateMachine : MonoBehaviour
     private AimController aimController;
     private GameFlowController gameFlowController;
     private ChargeSystem chargeSystem;
+    private TransitionManager transitionManager;
     
     // 事件
     public System.Action<PlayerState, PlayerState> OnStateChanged;
@@ -55,6 +56,7 @@ public class PlayerStateMachine : MonoBehaviour
         aimController = FindFirstObjectByType<AimController>();
         gameFlowController = GameFlowController.Instance;
         chargeSystem = GetComponent<ChargeSystem>();
+        transitionManager = FindFirstObjectByType<TransitionManager>();
         
         // 订阅能量耗尽事件
         if (chargeSystem != null)
@@ -246,6 +248,15 @@ public class PlayerStateMachine : MonoBehaviour
     {
         if (currentState == PlayerState.Charging)
         {
+            // 获取充能进度
+            float chargingPower = chargeSystem != null ? chargeSystem.GetChargingPower() : 0f;
+            
+            // 设置transition时长
+            if (transitionManager != null)
+            {
+                transitionManager.SetTransitionDurationFromCharging(chargingPower);
+            }
+            
             // 隐藏蓄力UI
             if (aimController != null)
             {
@@ -266,6 +277,11 @@ public class PlayerStateMachine : MonoBehaviour
             
             // 切换到运动状态
             SwitchToState(PlayerState.Moving);
+            
+            if (showDebugInfo)
+            {
+                Debug.Log($"PlayerStateMachine: 发射完成，充能进度: {chargingPower:F2}");
+            }
         }
     }
     

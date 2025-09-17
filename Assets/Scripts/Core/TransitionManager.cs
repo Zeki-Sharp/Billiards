@@ -10,6 +10,12 @@ public class TransitionManager : MonoBehaviour
     [SerializeField] private float transitionDuration = 3f; // 过渡持续时间
     [SerializeField] private bool enableAutoTransition = true; // 自动过渡
     
+    [Header("动态Transition设置")]
+    [SerializeField] private float minTransitionTime = 1f;        // 最小transition时间
+    [SerializeField] private float maxTransitionTime = 5f;        // 最大transition时间
+    [SerializeField] private float transitionThreshold = 0.3f;    // transition门槛值（0-1）
+    [SerializeField] private AnimationCurve chargingToTransitionCurve; // 可选：非线性映射曲线
+    
     [Header("调试")]
     [SerializeField] private bool showDebugInfo = true;
     
@@ -44,6 +50,40 @@ public class TransitionManager : MonoBehaviour
         if (showDebugInfo)
         {
             Debug.Log($"TransitionManager: 开始过渡，持续时间: {transitionDuration}秒");
+        }
+    }
+    
+    /// <summary>
+    /// 根据充能进度设置transition时长
+    /// </summary>
+    public void SetTransitionDurationFromCharging(float chargingPower)
+    {
+        // 充能不足门槛，无transition
+        if (chargingPower < transitionThreshold)
+        {
+            transitionDuration = 0f;
+            if (showDebugInfo)
+            {
+                Debug.Log($"TransitionManager: 充能不足，跳过transition阶段 - 充能进度: {chargingPower:F2}, 门槛值: {transitionThreshold:F2}");
+            }
+            return;
+        }
+        
+        // 充能超过门槛，计算transition时长
+        // 将 [threshold, 1.0] 映射到 [0, 1]
+        float normalizedCharging = (chargingPower - transitionThreshold) / (1f - transitionThreshold);
+        
+        // 使用曲线映射（如果设置了）或线性映射
+        float curveValue = chargingToTransitionCurve != null ? 
+            chargingToTransitionCurve.Evaluate(normalizedCharging) : 
+            normalizedCharging;
+        
+        // 映射到 [minTime, maxTime]
+        transitionDuration = Mathf.Lerp(minTransitionTime, maxTransitionTime, curveValue);
+        
+        if (showDebugInfo)
+        {
+            Debug.Log($"TransitionManager: 设置transition时长 - 充能进度: {chargingPower:F2}, 门槛值: {transitionThreshold:F2}, 标准化充能: {normalizedCharging:F2}, 曲线值: {curveValue:F2}, 最小时间: {minTransitionTime:F2}, 最大时间: {maxTransitionTime:F2}, 最终时长: {transitionDuration:F2}");
         }
     }
     
