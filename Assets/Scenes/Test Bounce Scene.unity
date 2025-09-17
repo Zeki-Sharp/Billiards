@@ -9716,7 +9716,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15b9ca4e3e4527543949e7fcc83cbeb7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyTimeScale: 0.01
+  enemyTimeScale: 0.1
   playerTimeScale: 1
   enableEnemyTimeStopInCharging: 1
   enableEnemyTimeStopInTransition: 1
