@@ -336,10 +336,6 @@ public class DamageTextManager : MonoBehaviour
     /// <param name="attackData">攻击数据</param>
     private void HandleAttack(AttackData attackData)
     {
-        if (enableDebugLog)
-        {
-            Debug.Log($"DamageTextManager: 收到攻击事件，攻击类型: {attackData.AttackType}, 伤害值: {attackData.Damage}, 位置: {attackData.Position}, 目标: {attackData.Target?.name}");
-        }
         
         // 检查是否有伤害值且大于0
         if (attackData.Damage > 0f)
@@ -347,17 +343,9 @@ public class DamageTextManager : MonoBehaviour
             // 显示伤害数字
             ShowDamageText(attackData.Position, attackData.Damage, attackData.Target);
             
-            if (enableDebugLog)
-            {
-                Debug.Log($"DamageTextManager: 显示伤害数字 {attackData.Damage} 在位置 {attackData.Position}");
-            }
         }
         else
         {
-            if (enableDebugLog)
-            {
-                Debug.Log($"DamageTextManager: 伤害值为 {attackData.Damage}，不显示伤害数字");
-            }
         }
     }
     

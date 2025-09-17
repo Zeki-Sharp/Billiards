@@ -114,11 +114,6 @@ public class PlayerMovementController : MonoBehaviour
         bool directionChanged = Vector2.Distance(direction, lastInputDirection) > 0.1f;
         bool speedChanged = Vector2.Distance(currentVelocity, targetVelocity) > 0.5f;
         
-        // 调试信息
-        if (showDebugInfo)
-        {
-            Debug.Log($"PlayerMovementController: microMoveSpeed={microMoveSpeed}, targetVelocity={targetVelocity}, currentVelocity={currentVelocity}, speedChanged={speedChanged}");
-        }
         
         // 如果方向改变或速度差距较大，重新设置速度
         if (directionChanged || speedChanged)
@@ -129,17 +124,6 @@ public class PlayerMovementController : MonoBehaviour
             // 更新上次输入方向
             lastInputDirection = direction;
             
-            if (showDebugInfo)
-            {
-                if (directionChanged)
-                {
-                    Debug.Log($"PlayerMovementController: WASD方向改变 - 新方向: {direction}, 设置速度: {targetVelocity}, 速度大小: {targetVelocity.magnitude:F2}");
-                }
-                else if (speedChanged)
-                {
-                    Debug.Log($"PlayerMovementController: WASD速度修正 - 方向: {direction}, 修正速度: {targetVelocity}, 速度大小: {targetVelocity.magnitude:F2}");
-                }
-            }
         }
         
         // 更新状态
@@ -161,10 +145,6 @@ public class PlayerMovementController : MonoBehaviour
             {
                 playerCore.SetVelocity(Vector2.zero);
                 
-                if (showDebugInfo)
-                {
-                    Debug.Log("PlayerMovementController: 没有输入，停止球体移动");
-                }
             }
         }
     }
@@ -183,10 +163,6 @@ public class PlayerMovementController : MonoBehaviour
             {
                 playerCore.SetVelocity(Vector2.zero);
                 
-                if (showDebugInfo)
-                {
-                    Debug.Log("PlayerMovementController: 蓄力输入触发，立即停止WASD移动");
-                }
             }
         }
     }
@@ -205,10 +181,6 @@ public class PlayerMovementController : MonoBehaviour
         // 检查方向向量是否有效
         if (direction.magnitude < 0.1f)
         {
-            if (showDebugInfo)
-            {
-                Debug.LogWarning("PlayerMovementController: 微调方向无效，白球不会移动");
-            }
             return;
         }
         
@@ -222,10 +194,6 @@ public class PlayerMovementController : MonoBehaviour
         // 如果白球正在物理移动，不能进行微调
         if (playerCore != null && playerCore.IsPhysicsMoving())
         {
-            if (showDebugInfo)
-            {
-                Debug.LogWarning("PlayerMovementController: 白球正在物理移动中，无法进行微调");
-            }
             return;
         }
         
@@ -235,11 +203,6 @@ public class PlayerMovementController : MonoBehaviour
         // 计算目标位置
         Vector2 targetPosition = currentPosition + direction.normalized * distance;
         
-        // 调试信息
-        if (showDebugInfo)
-        {
-            Debug.Log($"PlayerMovementController: 微调移动 - 从{currentPosition}到{targetPosition}");
-        }
         
         // 开始平滑移动协程
         StartCoroutine(SmoothMicroMove(targetPosition));

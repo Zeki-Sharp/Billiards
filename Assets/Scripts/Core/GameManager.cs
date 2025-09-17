@@ -60,6 +60,10 @@ public class GameManager : MonoBehaviour
     
     void Start()
     {
+        // 确保物理设置在Start中再次应用（防止构建时被覆盖）
+        Physics2D.gravity = Vector2.zero;
+        Debug.Log($"GameManager: 构建版本重力设置确认 - {Physics2D.gravity}");
+        
         // 游戏初始化由GameInitializer负责
         // 这里只做基本的游戏状态初始化
         InitializeGameState();

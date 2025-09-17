@@ -418,12 +418,8 @@ public class Enemy : MonoBehaviour
         // 获取敌人伤害值
         float damage = GetDamage();
         
-        Debug.Log($"Enemy {name} 准备攻击玩家 {targetPlayer.name}，伤害: {damage}，攻击位置: {attackPosition}");
-        
         // 触发攻击事件
         EventTrigger.Attack("EnemyAttack", attackPosition, attackDirection, gameObject, targetPlayer.gameObject, damage);
-        
-        Debug.Log($"Enemy {name} 已触发攻击事件");
     }
     
     /// <summary>
@@ -449,7 +445,7 @@ public class Enemy : MonoBehaviour
             }
             else
             {
-                Debug.Log($"Enemy {name} 在Charging阶段，不处理碰撞（由PlayerCore处理）");
+                // 在Charging阶段，不处理碰撞（由PlayerCore处理）
             }
         }
         
@@ -513,11 +509,7 @@ public class Enemy : MonoBehaviour
     void InitializeAnimator()
     {
         enemyAnimator = GetComponent<Animator>();
-        if (enemyAnimator != null)
-        {
-            Debug.Log($"敌人 {name} 动画组件初始化完成");
-        }
-        else
+        if (enemyAnimator == null)
         {
             Debug.LogWarning($"敌人 {name} 未找到Animator组件");
         }
@@ -543,21 +535,15 @@ public class Enemy : MonoBehaviour
     
     void Die()
     { 
-        Debug.Log($"敌人 {name} 开始死亡流程");
-        
         // 禁用碰撞器，停止与白球的物理交互
         Collider2D collider = GetComponent<Collider2D>();
         if (collider != null)
         {
             collider.enabled = false;
-            Debug.Log($"敌人 {name} 碰撞器已禁用");
         }
 
         // 触发死亡特效
-        Debug.Log($"敌人 {name} 触发死亡事件");
         EventTrigger.Dead(transform.position, Vector3.zero, gameObject);
-        
-        Debug.Log($"敌人 {name} 死亡流程完成");
     }
     
     /// <summary>
@@ -566,19 +552,11 @@ public class Enemy : MonoBehaviour
     /// </summary>
     private void HandleAttack(AttackData attackData)
     {
-        Debug.Log($"Enemy {name} 收到攻击事件: 目标={attackData.Target?.name}, 伤害={attackData.Damage}, 自己={gameObject.name}");
-        
         // 检查自己是否是攻击目标
         if (attackData.Target == gameObject && attackData.Damage > 0f)
         {
-            Debug.Log($"Enemy {name} 是攻击目标，处理伤害: {attackData.Damage}");
-            
             // 处理伤害
             TakeDamage(attackData.Damage);
-        }
-        else
-        {
-            Debug.Log($"Enemy {name} 不是攻击目标或伤害为0，忽略");
         }
     }
     
@@ -616,7 +594,6 @@ public class Enemy : MonoBehaviour
         var effectPlayer = GetComponentInChildren<EffectPlayer>();
         if (effectPlayer != null)
         {
-            Debug.Log($"敌人 {name} 播放生成特效 at {transform.position}");
             effectPlayer.PlayEffect("Enemy Spawn Effect", transform.position);
         }
         else

@@ -275,13 +275,9 @@ public class BallPhysics : MonoBehaviour
     {
         if (rb != null)
         {
-            Debug.Log($"BallPhysics.SetVelocity: 输入速度={velocity}, 速度大小={velocity.magnitude}");
-            
             // 发射时使用固定的物理参数，确保一致性
             SetFixedPhysicsForLaunch();
             rb.linearVelocity = velocity;
-            
-            Debug.Log($"BallPhysics.SetVelocity: 设置后速度={rb.linearVelocity}, 速度大小={rb.linearVelocity.magnitude}");
         }
         else
         {

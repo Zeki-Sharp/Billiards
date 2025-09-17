@@ -99,7 +99,6 @@ public class PlayerCore : MonoBehaviour
         if (ballPhysics != null)
         {
             ballPhysics.ResetBall();
-            Debug.Log("PlayerCore: 初始化完成，球体已重置为停止状态");
         }
     }
     
@@ -170,14 +169,11 @@ public class PlayerCore : MonoBehaviour
         float chargingPower = chargeSystem.GetChargingPower();
         float currentForce = chargeSystem.GetCurrentForce();
         
-        Debug.Log($"PlayerCore: 开始发射 - 蓄力强度={chargingPower:F2}, 力度={currentForce:F2}");
-        
         // 消耗能量
         EnergySystem energySystem = FindFirstObjectByType<EnergySystem>();
         if (energySystem != null)
         {
             energySystem.ConsumeEnergy();
-            Debug.Log("PlayerCore: 能量已消耗");
         }
         
         // 计算发射方向（朝向鼠标位置）
@@ -188,12 +184,8 @@ public class PlayerCore : MonoBehaviour
         // 使用蓄力系统的力度（直接使用蓄力系统计算的力度）
         float force = currentForce;
         
-        Debug.Log($"PlayerCore: 发射参数 - 方向={direction}, 力度={force:F2}");
-        
         // 发射
         Launch(direction, force);
-        
-        Debug.Log($"PlayerCore: 发射完成！力度: {force}, 方向: {direction}");
     }
     
     /// <summary>
@@ -223,20 +215,15 @@ public class PlayerCore : MonoBehaviour
         float launchSpeed = force;
         Vector2 velocity = direction.normalized * launchSpeed;
         
-        Debug.Log($"PlayerCore: 发射计算 - 方向={direction}, 力度={force}, 计算速度={velocity}, 速度大小={velocity.magnitude}");
-        
         // 直接设置刚体速度
         if (ballPhysics.GetComponent<Rigidbody2D>() != null)
         {
             ballPhysics.GetComponent<Rigidbody2D>().linearVelocity = velocity;
-            Debug.Log($"PlayerCore: 直接设置刚体速度: {velocity}");
         }
         else
         {
             ballPhysics.SetVelocity(velocity);
         }
-        
-        Debug.Log($"PlayerCore: 发射后实际速度={ballPhysics.GetVelocity()}, 速度大小={ballPhysics.GetSpeed()}");
     }
     
     #endregion
@@ -257,7 +244,7 @@ public class PlayerCore : MonoBehaviour
             }
             else
             {
-                Debug.Log($"PlayerCore: 在Normal/Transition阶段，不处理碰撞（由Enemy处理）");
+                // 在Normal/Transition阶段，不处理碰撞（由Enemy处理）
             }
         }
         
@@ -273,12 +260,6 @@ public class PlayerCore : MonoBehaviour
                 // 给白球添加撞墙充能力
                 Vector2 wallBoostForce = wallDirection * playerData.ballData.hitBoostForce * playerData.ballData.hitBoostMultiplier;
                 ballPhysics.ApplyForce(wallBoostForce);
-                
-                Debug.Log($"PlayerCore: 白球撞墙充能 - 获得力 {wallBoostForce} (速度:{ballPhysics.GetSpeed():F2})");
-            }
-            else
-            {
-                Debug.Log($"PlayerCore: 白球撞墙 - 速度过低({ballPhysics.GetSpeed():F2}<{playerData.ballData.boostSpeedThreshold})，无充能力");
             }
         }
     }
@@ -292,7 +273,6 @@ public class PlayerCore : MonoBehaviour
         if (lastAttackedEnemy == collision.gameObject && 
             Time.time - lastAttackTime < ATTACK_COOLDOWN)
         {
-            Debug.Log($"PlayerCore: 攻击同一敌人冷却中，忽略重复触发");
             return;
         }
         
@@ -308,8 +288,6 @@ public class PlayerCore : MonoBehaviour
         float damage = playerData != null ? playerData.damage : 50f;
         Vector3 hitPosition = (transform.position + collision.transform.position) * 0.5f;
         Vector3 hitDirection = (collision.transform.position - transform.position).normalized;
-        
-        Debug.Log($"PlayerCore: 攻击敌人 {enemy.name}，伤害: {damage}");
         
         // 触发攻击事件，伤害处理由事件监听器处理
         EventTrigger.Attack("Hit", hitPosition, hitDirection, gameObject, collision.gameObject, damage);
@@ -332,12 +310,6 @@ public class PlayerCore : MonoBehaviour
                 
                 // 给敌人添加充能力
                 enemyBallPhysics.ApplyForce(-boostForce);
-                
-                Debug.Log($"PlayerCore: 白球碰撞充能 - 白球获得力 {boostForce}，敌人获得力 {-boostForce} (速度:{ballPhysics.GetSpeed():F2})");
-            }
-            else
-            {
-                Debug.Log($"PlayerCore: 白球碰撞敌人 - 速度过低({ballPhysics.GetSpeed():F2}<{playerData.ballData.boostSpeedThreshold})，无充能力");
             }
         }
     }
@@ -369,7 +341,6 @@ public class PlayerCore : MonoBehaviour
         PlayerStateMachine stateMachine = GetComponent<PlayerStateMachine>();
         if (stateMachine != null && !stateMachine.IsIdle)
         {
-            Debug.Log($"PlayerCore: 玩家不在Idle状态，免疫伤害 - 当前状态: {stateMachine.CurrentState}, 伤害: {damage}");
             return;
         }
         
@@ -379,8 +350,6 @@ public class PlayerCore : MonoBehaviour
         currentHealth = Mathf.Max(0, currentHealth);
         
         float maxHealth = playerData.maxHealth;
-        
-        Debug.Log($"PlayerCore: 受到伤害: {damage}, 当前血量: {currentHealth}/{maxHealth}");
         
         // 更新血条
         if (healthBar != null)
@@ -403,7 +372,6 @@ public class PlayerCore : MonoBehaviour
     /// </summary>
     void Die()
     {
-        Debug.Log("PlayerCore: 玩家死亡！");
         // 可以在这里添加死亡逻辑
     }
     
@@ -464,19 +432,11 @@ public class PlayerCore : MonoBehaviour
     /// </summary>
     private void HandleAttack(AttackData attackData)
     {
-        Debug.Log($"PlayerCore: 收到攻击事件 - 攻击者: {attackData.Attacker?.name}, 目标: {attackData.Target?.name}, 伤害: {attackData.Damage}, 攻击类型: {attackData.AttackType}");
-        
         // 检查自己是否是攻击目标
         if (attackData.Target == gameObject && attackData.Damage > 0f)
         {
-            Debug.Log($"PlayerCore: 自己是攻击目标，处理伤害: {attackData.Damage}");
-            
             // 处理伤害
             TakeDamage(attackData.Damage);
-        }
-        else
-        {
-            Debug.Log($"PlayerCore: 不是攻击目标或伤害为0，忽略攻击事件");
         }
     }
     
@@ -496,7 +456,6 @@ public class PlayerCore : MonoBehaviour
             healthBar.SetTarget(transform);
             float maxHealth = playerData != null ? playerData.maxHealth : 100f;
             healthBar.UpdateHealth(currentHealth, maxHealth);
-            Debug.Log($"PlayerCore: 血条初始化完成 - 当前血量: {currentHealth}/{maxHealth}, 血量百分比: {currentHealth/maxHealth:F2}");
         }
         else
         {
@@ -539,7 +498,6 @@ public class PlayerCore : MonoBehaviour
             movementController.StopWASDMovement();
         }
         
-        Debug.Log("PlayerCore: 重置为新回合");
     }
     
     #endregion
@@ -552,7 +510,6 @@ public class PlayerCore : MonoBehaviour
     public void SetChargeSystem(ChargeSystem system)
     {
         chargeSystem = system;
-        Debug.Log($"PlayerCore: 设置蓄力系统引用为 {system.name}");
     }
     
     #endregion

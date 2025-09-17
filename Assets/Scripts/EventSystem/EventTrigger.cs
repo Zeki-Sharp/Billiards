@@ -47,11 +47,6 @@ public static class EventTrigger
         // 触发表现事件
         AttackEffectEvent.Trigger(attackData);
         
-        // 调试日志
-        if (Debug.isDebugBuild)
-        {
-            Debug.Log($"EventTrigger.Attack: {attackType} -> {attacker?.name} 攻击 {target?.name}, 伤害: {damage}");
-        }
     }
     
     /// <summary>
@@ -93,11 +88,6 @@ public static class EventTrigger
         // 触发表现事件
         AttackEffectEvent.Trigger(attackData);
         
-        // 调试日志
-        if (Debug.isDebugBuild)
-        {
-            Debug.Log($"EventTrigger.Attack: {attackType} -> {attacker?.name} 攻击 {target?.name}, 伤害: {damage}, 速度: {speed}");
-        }
     }
     
     #endregion
@@ -126,8 +116,6 @@ public static class EventTrigger
         // 触发表现事件
         DeathEffectEvent.Trigger(deathData);
         
-        // 调试日志
-        Debug.Log($"EventTrigger.Dead: 触发死亡事件，目标: {target?.name}");
     }
     
     #endregion

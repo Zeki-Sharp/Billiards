@@ -94,20 +94,15 @@ public class EffectManager : MonoBehaviour, MMEventListener<EffectEvent>, MMEven
     /// </summary>
     public void OnMMEvent(EffectEvent effectEvent)
     {
-        if (enableDebugLog)
-            Debug.Log($"EffectManager接收到特效事件: {effectEvent.EffectType} at {effectEvent.Position}");
         
         // 播放全局特效（简化版本，不包含撞墙参数）
         if (globalEffectPlayer != null)
         {
             globalEffectPlayer.PlayEffect(effectEvent.EffectType, effectEvent.Position, effectEvent.Direction, Vector3.zero, 0f, 0f, Vector3.zero);
-            if (enableDebugLog)
-                Debug.Log($"播放全局{effectEvent.EffectType}特效 at {effectEvent.Position}");
         }
         else
         {
-            if (enableDebugLog)
-                Debug.LogWarning($"全局特效播放器为null，无法播放全局{effectEvent.EffectType}特效");
+            Debug.LogWarning($"全局特效播放器为null，无法播放全局{effectEvent.EffectType}特效");
         }
         
         // 播放目标对象特效（简化版本，不包含撞墙参数）
@@ -117,8 +112,6 @@ public class EffectManager : MonoBehaviour, MMEventListener<EffectEvent>, MMEven
             if (objectEffectPlayer != null)
             {
                 objectEffectPlayer.PlayEffect(effectEvent.EffectType, effectEvent.Position, effectEvent.Direction, Vector3.zero, 0f, 0f, Vector3.zero);
-                if (enableDebugLog)
-                    Debug.Log($"播放对象{effectEvent.EffectType}特效 - {effectEvent.TargetObject.name} at {effectEvent.Position}");
             }
             else
             {
