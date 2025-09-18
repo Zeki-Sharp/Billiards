@@ -188,22 +188,44 @@ public class GameFlowController : MonoBehaviour
     /// </summary>
     bool CanEnterChargingState()
     {
+        if (showDebugInfo)
+        {
+            Debug.Log("GameFlowController: 检查是否可以进入蓄力状态");
+        }
+        
         // 检查能量是否足够
         if (energySystem != null && !energySystem.CanUseEnergy())
         {
+            if (showDebugInfo)
+            {
+                Debug.Log($"GameFlowController: 能量不足，无法进入蓄力状态 - 当前能量: {energySystem.GetCurrentEnergy():F2}, 门槛: {energySystem.GetEnergyThreshold():F2}");
+            }
             return false;
         }
         
         // 检查玩家状态
         if (playerStateMachine != null && !playerStateMachine.IsIdle)
         {
+            if (showDebugInfo)
+            {
+                Debug.Log($"GameFlowController: 玩家不在Idle状态，无法进入蓄力状态 - 当前状态: {playerStateMachine.CurrentState}");
+            }
             return false;
         }
         
         // 检查玩家是否在物理移动
         if (playerCore != null && playerCore.IsPhysicsMoving())
         {
+            if (showDebugInfo)
+            {
+                Debug.Log("GameFlowController: 玩家正在物理移动，无法进入蓄力状态");
+            }
             return false;
+        }
+        
+        if (showDebugInfo)
+        {
+            Debug.Log("GameFlowController: 所有条件满足，可以进入蓄力状态");
         }
         
         // 现在由PlayerInputHandler主动调用RequestChargingState()来触发状态切换
@@ -255,10 +277,18 @@ public class GameFlowController : MonoBehaviour
     /// </summary>
     public void RequestChargingState()
     {
-        if (CanEnterChargingState())
+        if (showDebugInfo)
         {
-            SwitchToChargingState();
+            Debug.Log("GameFlowController: 收到进入蓄力状态请求");
         }
+        
+        // 直接切换，因为PlayerStateMachine已经验证了条件
+        // 这里不再重复检查，避免时序问题
+        if (showDebugInfo)
+        {
+            Debug.Log("GameFlowController: PlayerStateMachine已验证条件，直接切换到蓄力状态");
+        }
+        SwitchToChargingState();
     }
     
     /// <summary>
@@ -266,10 +296,17 @@ public class GameFlowController : MonoBehaviour
     /// </summary>
     public void RequestTransitionState()
     {
-        if (CanEnterTransitionState())
+        if (showDebugInfo)
         {
-            SwitchToTransitionState();
+            Debug.Log("GameFlowController: 收到进入过渡状态请求");
         }
+        
+        // 直接切换，因为PlayerStateMachine已经验证了条件
+        if (showDebugInfo)
+        {
+            Debug.Log("GameFlowController: PlayerStateMachine已验证条件，直接切换到过渡状态");
+        }
+        SwitchToTransitionState();
     }
     
     /// <summary>
@@ -277,10 +314,17 @@ public class GameFlowController : MonoBehaviour
     /// </summary>
     public void RequestNormalState()
     {
-        if (CanReturnToNormalState())
+        if (showDebugInfo)
         {
-            SwitchToNormalState();
+            Debug.Log("GameFlowController: 收到回到正常状态请求");
         }
+        
+        // 直接切换，因为PlayerStateMachine已经验证了条件
+        if (showDebugInfo)
+        {
+            Debug.Log("GameFlowController: PlayerStateMachine已验证条件，直接切换到正常状态");
+        }
+        SwitchToNormalState();
     }
     
     #endregion

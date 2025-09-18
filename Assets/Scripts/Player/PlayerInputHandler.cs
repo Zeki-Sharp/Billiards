@@ -212,19 +212,39 @@ public class PlayerInputHandler : MonoBehaviour
         // 检测蓄力输入，先检查游戏状态和能量门槛
         if (isAttackPressed)
         {
+            if (showDebugInfo)
+            {
+                Debug.Log("PlayerInputHandler: 检测到攻击输入，开始检查蓄力条件");
+            }
+            
             // 检查游戏状态，只能在Normal状态下蓄力
             if (gameFlowController != null && !gameFlowController.IsNormalState)
             {
+                if (showDebugInfo)
+                {
+                    Debug.Log($"PlayerInputHandler: 游戏状态不是Normal，无法蓄力 - 当前状态: {gameFlowController.CurrentState}");
+                }
                 return;
             }
             
             // 检查能量门槛
             if (energySystem != null && energySystem.CanUseEnergy())
             {
+                if (showDebugInfo)
+                {
+                    Debug.Log($"PlayerInputHandler: 能量充足，开始蓄力 - 当前能量: {energySystem.GetCurrentEnergy():F2}, 门槛: {energySystem.GetEnergyThreshold():F2}");
+                }
                 // 能量充足，开始蓄力
                 if (stateMachine != null)
                 {
                     stateMachine.StartCharging();
+                }
+            }
+            else
+            {
+                if (showDebugInfo)
+                {
+                    Debug.Log($"PlayerInputHandler: 能量不足，无法蓄力 - 当前能量: {energySystem?.GetCurrentEnergy():F2}, 门槛: {energySystem?.GetEnergyThreshold():F2}");
                 }
             }
         }
